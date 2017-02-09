@@ -1,0 +1,53 @@
+# depslib dependency file v1.0
+1486609646 source:d:\users\mcphy\codeblocks\othello\othello.c
+	<stdio.h>
+	<stdlib.h>
+	"GL/glut.h"
+	"Board.h"
+	"Computer.h"
+
+1426349728 d:\users\mcphy\codeblocks\othello\gl\glut.h
+	"freeglut_std.h"
+
+1426349728 d:\users\mcphy\codeblocks\othello\gl\freeglut_std.h
+	<windows.h>
+	<EGL/egl.h>
+	<GLES/gl.h>
+	<GLES2/gl2.h>
+	<OpenGL/gl.h>
+	<OpenGL/glu.h>
+	<GL/gl.h>
+	<GL/glu.h>
+	<stdlib.h>
+
+1486608883 source:d:\users\mcphy\codeblocks\othello\board.c
+	"Board.h"
+	<stdlib.h>
+	"Turn.h"
+	"List.h"
+
+1486604045 source:d:\users\mcphy\codeblocks\othello\computer.c
+	"Computer.h"
+	<stdlib.h>
+
+1486600374 source:d:\users\mcphy\codeblocks\othello\list.c
+	"List.h"
+	<stdlib.h>
+
+1486582175 source:d:\users\mcphy\codeblocks\othello\multigame.c
+
+1486609776 d:\users\mcphy\codeblocks\othello\board.h
+	"List.h"
+
+1486600575 d:\users\mcphy\codeblocks\othello\list.h
+	"Turn.h"
+
+1486590253 source:d:\users\mcphy\codeblocks\othello\turn.c
+	"Turn.h"
+
+1486589897 d:\users\mcphy\codeblocks\othello\turn.h
+
+1486603587 d:\users\mcphy\codeblocks\othello\computer.h
+	"Board.h"
+	"Turn.h"
+
