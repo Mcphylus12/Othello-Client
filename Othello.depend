@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1486609646 source:d:\users\mcphy\codeblocks\othello\othello.c
+1486693907 source:d:\users\mcphy\codeblocks\othello\othello.c
 	<stdio.h>
 	<stdlib.h>
 	"GL/glut.h"
@@ -20,17 +20,19 @@
 	<GL/glu.h>
 	<stdlib.h>
 
-1486608883 source:d:\users\mcphy\codeblocks\othello\board.c
+1486692881 source:d:\users\mcphy\codeblocks\othello\board.c
 	"Board.h"
 	<stdlib.h>
+	<stdio.h>
 	"Turn.h"
 	"List.h"
 
-1486604045 source:d:\users\mcphy\codeblocks\othello\computer.c
+1486693207 source:d:\users\mcphy\codeblocks\othello\computer.c
 	"Computer.h"
 	<stdlib.h>
+	<stdio.h>
 
-1486600374 source:d:\users\mcphy\codeblocks\othello\list.c
+1486692770 source:d:\users\mcphy\codeblocks\othello\list.c
 	"List.h"
 	<stdlib.h>
 

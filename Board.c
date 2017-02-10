@@ -53,9 +53,9 @@ Board* createBoardFromBoard(Board* board){
 
 unsigned short getTile(Board* board, short i, short j){
     if(i < 0 || i > 7 || j < 0 || j > 7){
-        return board->board[i][j];
-    } else {
         return EMPTY;
+    } else {
+        return board->board[i][j];
     }
     return EMPTY;
 }
@@ -274,7 +274,6 @@ short fillOpenMoves(Board* b, int activePlayer){
                 }
 
                 if(goodMove){
-                    printf("goodmove found");
                     t = createTurnFromXY(i, j);
                     t->B = B;
                     t->BL = BL;

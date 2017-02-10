@@ -47,17 +47,27 @@ void clearList(MoveList* movelist){
     itr = movelist->head;
     while(itr != NULL_PTR){
 
-        itr = destroyMoveNodeandGetNext(movelist);
+        itr = destroyMoveNodeandGetNext(itr);
     }
     movelist->head = NULL_PTR;
 
 }
 
 void addTurnToMoveList(MoveList* ml, Turn* t){
+    MoveNode* itr;
     if(ml->head == NULL_PTR){
         ml->head = createMoveNode();
         ml->head->next = NULL_PTR;
         ml->head->turn = t;
+    } else {
+        itr = ml->head;
+        while(itr->next != NULL_PTR){
+            itr = itr->next;
+        }
+        itr->next = createMoveNode();
+        itr = itr->next;
+        itr->next = NULL_PTR;
+        itr->turn = t;
     }
 }
 

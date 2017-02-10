@@ -37,7 +37,6 @@ short contains(Rect* rect, int x, int y){
 }
 
 void switchPlayer(){
-    activePlayer = activePlayer == 1 ? 2 : 1;
     if(activePlayer== BLACK){
         activePlayer = WHITE;
     } else {
@@ -47,6 +46,7 @@ void switchPlayer(){
 
 void renderScene(void) {
     int i, j;
+    MoveNode* itr;
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -73,12 +73,21 @@ void renderScene(void) {
                     glColor3f(1, 1, 1);
                 }
                 glBegin(GL_LINES);
-                    glVertex3f(boardBounds.x + boardBounds.width/8*i, boardBounds.y + boardBounds.height/8*j, 0.0f);
-                    glVertex3f(boardBounds.x + boardBounds.width/8*(i+1), boardBounds.y + boardBounds.height/8*(j+1), 0.0f);
+                    glVertex3f(boardBounds.x + boardBounds.width/8*(i), boardBounds.y + boardBounds.height/8*(8 - j), 0.0f);
+                    glVertex3f(boardBounds.x + boardBounds.width/8*(i+1), boardBounds.y + boardBounds.height/8*(8 - (j+1)), 0.0f);
                 glEnd();
             }
         }
 	}
+	glColor3f(1.0, 0.0, 0.0);
+	itr = b->openMoves->head;
+    while(itr != NULL_PTR){
+        glBegin(GL_LINES);
+            glVertex3f(boardBounds.x + boardBounds.width/8*(itr->turn->x), boardBounds.y + boardBounds.height/8*(8 - itr->turn->y), 0.0f);
+            glVertex3f(boardBounds.x + boardBounds.width/8*(itr->turn->x+1), boardBounds.y + boardBounds.height/8*(8 - (itr->turn->y+1)), 0.0f);
+        glEnd();
+        itr = itr->next;
+    }
 
     glutSwapBuffers();
 
@@ -93,11 +102,8 @@ void processKeyboard(int button, int state, int x, int y){
     Turn* compTurn;
     goodMove = 0;
     if(button == GLUT_LEFT_BUTTON && state == GLUT_DOWN){
-        printf("Click Correct\n");
         if(contains(&boardBounds, x, y)){
-            printf("Click in Board\n");
             if(activePlayer == playerColor){
-                printf("Click was made by player\n");
                 boardx = x - boardBounds.y;
                 boardy = y - boardBounds.y;
                 cellX = (int) boardx / (boardBounds.width /8);
@@ -106,37 +112,45 @@ void processKeyboard(int button, int state, int x, int y){
                 if(isMoveListEmpty(b->openMoves)){
                     printf("Move List was empty\n");
                 } else {
-                    printf("moveList was populated");
+                    printf("moveList was populated\n");
                     itr = b->openMoves->head;
                     while(itr != NULL_PTR){
                         itrTurn = itr->turn;
                         if(itrTurn->x == cellX && itrTurn->y == cellY){
-                            printf("move was found to be good");
                             goodMove = 1;
                             break;
                         }
                         itr = itr->next;
                     }
                     if(goodMove){
-                        printf("move was good confirmed");
+                        printf("move was good\n");
                         b->board[itrTurn->x][itrTurn->y] = activePlayer;
+                        printf("new piece added\n");
                         flipCaptured(b, itrTurn, activePlayer);
+                        printf("pieces captured\n");
                         updateTree(compOpp, itrTurn, activePlayer);
+                        printf("computer data updated\n");
                         compTurn = makeMove(compOpp);
-
+                        printf("computer calculated move at %i, %i\n", compTurn->x, compTurn->y);
                         switchPlayer();
                         b->board[compTurn->x][compTurn->y] = activePlayer;
+                        printf("computer piece added\n");
                         flipCaptured(b, compTurn, activePlayer);
+                        printf("computer pieces captured\n");
                         switchPlayer();
                         fillOpenMoves(b, activePlayer);
+                        printf("moves filled\n");
                         switchPlayer();
                         updateTree(compOpp, compTurn, activePlayer);
+                        printf("computer data updated again\n");
                         switchPlayer();
                         destroyTurn(compTurn);
+                        printf("turn destroyed\n");
                     }
                 }
             }
         }
+        printf("click code finished\n");
     }
 }
 

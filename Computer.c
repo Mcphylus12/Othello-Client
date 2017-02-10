@@ -1,5 +1,6 @@
 #include "Computer.h"
 #include <stdlib.h>
+#include <stdio.h>
 
 Computer* createComputer(Board* b, short player){
     Computer* result;
@@ -37,6 +38,7 @@ Turn* makeMove(Computer* c){
         max = c->board->openMoves->head->turn;
         itr = c->board->openMoves->head;
         while(itr->next != NULL_PTR){
+            printf("decision made with  depth %i", 3);
             b = createBoardFromBoard(c->board);
             t = itr->turn;
             b->board[t->x][t->y] = c->player;
@@ -48,6 +50,7 @@ Turn* makeMove(Computer* c){
                 maxh = heuristic; max = t;
             }
             destroyBoard(b);
+            itr = itr->next;
         }
         return max;
 
@@ -90,6 +93,7 @@ float processNode(int levelsLeft, int player, Board* board, Computer* callback){
                 minh = heuristic;
             }
             destroyBoard(b);
+            itr = itr->next;
         }
         if(player == callback->player){
             return maxh;
@@ -124,6 +128,7 @@ float getHeuristic(Computer* c, Board* b){
     oppmovecount = getMoveListSize(b->openMoves);
     divisor = allAdjacentTiles(b);
     result = ((float)ourMoveCount) - ((float)oppmovecount) / ((float)divisor);
+    printf("heuristic formula calculated (%i - %i)/%i result was %f \n", ourMoveCount, oppmovecount, divisor, result);
     return result;
 
 }
