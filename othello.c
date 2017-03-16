@@ -4,12 +4,9 @@
 
 #include "Board.h"
 #include "Computer.h"
-/**
-*  TODO
-*   fillopenmove goodmove boolean never getting set to true
-*
-*
-*/
+
+
+
 typedef struct tagRect{
     float x;
     float y;
@@ -55,6 +52,12 @@ void renderScene(void) {
 	glMatrixMode(GL_MODELVIEW);
     glColor3f(0, 0, 0);
 	glBegin(GL_LINES);
+	glVertex3f(boardBounds.x, boardBounds.y, 0.0f); glVertex3f(boardBounds.x, boardBounds.y + boardBounds.height, 0.0f);
+    glVertex3f(boardBounds.x, boardBounds.y, 0.0f); glVertex3f(boardBounds.x + boardBounds.width, boardBounds.y, 0.0f);
+    glVertex3f(boardBounds.x + boardBounds.width, boardBounds.y, 0.0f); glVertex3f(boardBounds.x + boardBounds.width, boardBounds.y + boardBounds.height, 0.0f);
+    glVertex3f(boardBounds.x, boardBounds.y + boardBounds.height, 0.0f); glVertex3f(boardBounds.x + boardBounds.width, boardBounds.y + boardBounds.height, 0.0f);
+
+
         for (i = 1 ; i <= 7; i++){
             glVertex3f(boardBounds.x + boardBounds.width/8*i, boardBounds.y, 0.0f); glVertex3f(boardBounds.x + boardBounds.width/8*i, boardBounds.y + boardBounds.height, 0.0f);
             //g.drawLine(boardBounds.x + boardBounds.width/8*i, boardBounds.y, boardBounds.x + boardBounds.width/8*i, boardBounds.y + boardBounds.height);
@@ -66,15 +69,17 @@ void renderScene(void) {
 
 	for(i = 0; i < 8; i++){
         for(j = 0; j < 8; j++){
-            if(b->board[i][j] != EMPTY){
-                if(b->board[i][j] == BLACK){
+            if(getTile(b, i, j) != EMPTY){
+                if(getTile(b, i, j) == BLACK){
                     glColor3f(0, 0, 0);
                 } else {
                     glColor3f(1, 1, 1);
                 }
-                glBegin(GL_LINES);
+                glBegin(GL_POLYGON);
                     glVertex3f(boardBounds.x + boardBounds.width/8*(i), boardBounds.y + boardBounds.height/8*(8 - j), 0.0f);
+                    glVertex3f(boardBounds.x + boardBounds.width/8*(i), boardBounds.y + boardBounds.height/8*(8 - (j+1)), 0.0f);
                     glVertex3f(boardBounds.x + boardBounds.width/8*(i+1), boardBounds.y + boardBounds.height/8*(8 - (j+1)), 0.0f);
+                    glVertex3f(boardBounds.x + boardBounds.width/8*(i+1), boardBounds.y + boardBounds.height/8*(8 - j), 0.0f);
                 glEnd();
             }
         }
@@ -82,9 +87,11 @@ void renderScene(void) {
 	glColor3f(1.0, 0.0, 0.0);
 	itr = b->openMoves->head;
     while(itr != NULL_PTR){
-        glBegin(GL_LINES);
+        glBegin(GL_POLYGON);
             glVertex3f(boardBounds.x + boardBounds.width/8*(itr->turn->x), boardBounds.y + boardBounds.height/8*(8 - itr->turn->y), 0.0f);
+            glVertex3f(boardBounds.x + boardBounds.width/8*(itr->turn->x), boardBounds.y + boardBounds.height/8*(8 - (itr->turn->y+1)), 0.0f);
             glVertex3f(boardBounds.x + boardBounds.width/8*(itr->turn->x+1), boardBounds.y + boardBounds.height/8*(8 - (itr->turn->y+1)), 0.0f);
+            glVertex3f(boardBounds.x + boardBounds.width/8*(itr->turn->x+1), boardBounds.y + boardBounds.height/8*(8 - (itr->turn->y)), 0.0f);
         glEnd();
         itr = itr->next;
     }
@@ -104,7 +111,7 @@ void processKeyboard(int button, int state, int x, int y){
     if(button == GLUT_LEFT_BUTTON && state == GLUT_DOWN){
         if(contains(&boardBounds, x, y)){
             if(activePlayer == playerColor){
-                boardx = x - boardBounds.y;
+                boardx = x - boardBounds.x;
                 boardy = y - boardBounds.y;
                 cellX = (int) boardx / (boardBounds.width /8);
                 cellY = (int) boardy / (boardBounds.height /8);
@@ -124,8 +131,6 @@ void processKeyboard(int button, int state, int x, int y){
                     }
                     if(goodMove){
                         printf("move was good\n");
-                        b->board[itrTurn->x][itrTurn->y] = activePlayer;
-                        printf("new piece added\n");
                         flipCaptured(b, itrTurn, activePlayer);
                         printf("pieces captured\n");
                         updateTree(compOpp, itrTurn, activePlayer);
@@ -133,8 +138,6 @@ void processKeyboard(int button, int state, int x, int y){
                         compTurn = makeMove(compOpp);
                         printf("computer calculated move at %i, %i\n", compTurn->x, compTurn->y);
                         switchPlayer();
-                        b->board[compTurn->x][compTurn->y] = activePlayer;
-                        printf("computer piece added\n");
                         flipCaptured(b, compTurn, activePlayer);
                         printf("computer pieces captured\n");
                         switchPlayer();
@@ -157,9 +160,9 @@ void processKeyboard(int button, int state, int x, int y){
 int main(int argc, char **argv)
 {
 
-    boardBounds.x = 00;
+    boardBounds.x = 300;
     boardBounds.y = 00;
-    boardBounds.width = 1000;
+    boardBounds.width = 700;
     boardBounds.height = 600;
     screenBounds.x = 100;
     screenBounds.y = 100;

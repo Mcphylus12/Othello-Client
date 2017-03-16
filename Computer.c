@@ -2,6 +2,17 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+const int posTable[8][8] = {
+{5, 4, 3, 2, 2, 3, 4, 5},
+{4, -3, 0, 0, 0, 0, -3, 4},
+{3, 0, 0, 0, 0, 0, 0, 3},
+{2, 0, 0, 0, 0, 0, 0, 2},
+{2, 0, 0, 0, 0, 0, 0, 2},
+{3, 0, 0, 0, 0, 0, 0, 3},
+{4, -3, 0, 0, 0, 0, -3, 4},
+{5, 4, 3, 2, 2, 3, 4, 5}
+};
+
 Computer* createComputer(Board* b, short player){
     Computer* result;
     result = (Computer*)malloc(sizeof(Computer));
@@ -12,7 +23,6 @@ Computer* createComputer(Board* b, short player){
 
 void updateTree(Computer* computer, Turn* t, short player){
     short otherTurn;
-    computer->board->board[t->x][t->y] = player;
     flipCaptured(computer->board, t, player);
     if(player == BLACK){
         otherTurn = WHITE;
@@ -23,40 +33,43 @@ void updateTree(Computer* computer, Turn* t, short player){
 }
 
 Turn* makeMove(Computer* c){
-        Turn* max;
-        MoveNode* itr;
-        Board* b;
-        Turn* t;
-        float maxh, heuristic;
-        short otherTurn;
-        maxh = -1;
-        if(c->player == BLACK){
-            otherTurn = WHITE;
-        } else {
-            otherTurn = BLACK;
+    float alpha, beta;
+    Turn* max;
+    MoveNode* itr;
+    Board* b;
+    Turn* t;
+    float maxh, heuristic;
+    short otherTurn;
+    maxh = -1;
+    alpha = -1;
+    beta = 1;
+    if(c->player == BLACK){
+        otherTurn = WHITE;
+    } else {
+        otherTurn = BLACK;
+    }
+    max = c->board->openMoves->head->turn;
+    itr = c->board->openMoves->head;
+    while(itr->next != NULL_PTR && alpha < beta){
+        printf("decision made with  depth %i\n", 3);
+        b = createBoardFromBoard(c->board);
+        t = itr->turn;
+        flipCaptured(b, t, c->player);
+        fillOpenMoves(b, otherTurn);
+        //System.out.println("ROOT:Processing child from root made with Turn:" + t.toString());
+        heuristic = processNode(4, otherTurn, b, c, alpha, beta);
+        if(heuristic > maxh){
+            maxh = heuristic; max = t;
+            alpha = heuristic;
         }
-        max = c->board->openMoves->head->turn;
-        itr = c->board->openMoves->head;
-        while(itr->next != NULL_PTR){
-            printf("decision made with  depth %i", 3);
-            b = createBoardFromBoard(c->board);
-            t = itr->turn;
-            b->board[t->x][t->y] = c->player;
-            flipCaptured(b, t, c->player);
-            fillOpenMoves(b, otherTurn);
-            //System.out.println("ROOT:Processing child from root made with Turn:" + t.toString());
-            heuristic = processNode(3, otherTurn, b, c);
-            if(heuristic > maxh){
-                maxh = heuristic; max = t;
-            }
-            destroyBoard(b);
-            itr = itr->next;
-        }
-        return max;
+        destroyBoard(b);
+        itr = itr->next;
+    }
+    return max;
 
 }
 
-float processNode(int levelsLeft, int player, Board* board, Computer* callback){
+float processNode(int levelsLeft, int player, Board* board, Computer* callback, float alpha, float beta){
     MoveNode* itr;
     Board* b;
     Turn* t;
@@ -79,21 +92,32 @@ float processNode(int levelsLeft, int player, Board* board, Computer* callback){
         return getHeuristic(callback, board);
     } else {
         while(itr->next != NULL_PTR){
-            b = createBoardFromBoard(board);
-            t = itr->turn;
-            b->board[t->x][t->y] = callback->player;
-            flipCaptured(b, t, callback->player);
-            fillOpenMoves(b, otherTurn);
-            //System.out.println("ROOT:Processing child from root made with Turn:" + t.toString());
-            heuristic = processNode(levelsLeft-1, otherTurn, b, callback);
-            if(heuristic > maxh){
-                maxh = heuristic;
+            if( alpha < beta){
+                    printf("alpha: %f, beta: %f", alpha, beta);
+                b = createBoardFromBoard(board);
+                t = itr->turn;
+                flipCaptured(b, t, callback->player);
+                fillOpenMoves(b, otherTurn);
+                //System.out.println("ROOT:Processing child from root made with Turn:" + t.toString());
+                heuristic = processNode(levelsLeft-1, otherTurn, b, callback, alpha, beta);
+                if(heuristic > maxh){
+                    maxh = heuristic;
+                    if(player == callback->player){
+                        alpha = heuristic;
+                    }
+                }
+                if(heuristic < minh){
+                    minh = heuristic;
+                    if(player != callback->player){
+                        beta = heuristic;
+                    }
+                }
+                destroyBoard(b);
+                itr = itr->next;
+            }else {
+                printf("pruned tree \n");
+                itr = itr->next;
             }
-            if(heuristic < minh){
-                minh = heuristic;
-            }
-            destroyBoard(b);
-            itr = itr->next;
         }
         if(player == callback->player){
             return maxh;
@@ -114,22 +138,35 @@ float getHeuristic(Computer* c, Board* b){
     //System.out.printf("heuristic formula calculated (%f - %f)/%f counter at %d result was %f", ourmovecount, oppmovecount, divisaor, counter++, result);
     return result;
 */
-    int ourMoveCount, oppmovecount, divisor;
-    short otherTurn;
-    float result;
-    fillOpenMoves(b, c->player);
-    ourMoveCount = getMoveListSize(b->openMoves);
-    if(c->player == BLACK){
-        otherTurn = WHITE;
+        int ourMoveCount, oppmovecount, divisor;
+        short otherTurn;
+        float result;
+    if(countPieces(b, EMPTY) < 10){
+        ourMoveCount = countPieces(b, c->player);
+        if(c->player == BLACK){
+            otherTurn = WHITE;
+        } else {
+            otherTurn = BLACK;
+        }
+        oppmovecount = countPieces(b, otherTurn);
+        return 0;
+
+        //this is end game
     } else {
-        otherTurn = BLACK;
+
+        fillOpenMoves(b, c->player);
+        ourMoveCount = getMoveListSize(b->openMoves);
+        if(c->player == BLACK){
+            otherTurn = WHITE;
+        } else {
+            otherTurn = BLACK;
+        }
+        fillOpenMoves(b, otherTurn);
+        oppmovecount = getMoveListSize(b->openMoves);
+        divisor = allAdjacentTiles(b);
+        result = ((((float)ourMoveCount) - ((float)oppmovecount)) / ((float)divisor));
+        return result;
     }
-    fillOpenMoves(b, otherTurn);
-    oppmovecount = getMoveListSize(b->openMoves);
-    divisor = allAdjacentTiles(b);
-    result = ((float)ourMoveCount) - ((float)oppmovecount) / ((float)divisor);
-    printf("heuristic formula calculated (%i - %i)/%i result was %f \n", ourMoveCount, oppmovecount, divisor, result);
-    return result;
 
 }
 

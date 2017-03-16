@@ -1,32 +1,22 @@
 #include "Turn.h"
 
-Turn* createTurn(){
+Turn* createTurn(short x, short y, uint64_t board, short color){
     Turn* result;
     result = (Turn*)malloc(sizeof(Turn));
-    return result;
-}
-
-Turn* createTurnFromXY(short x, short y){
-    Turn* result;
-    result = createTurn();
     result->x = x;
     result->y = y;
+    result->board = board;
+    result->color = color;
     return result;
 }
 
 Turn* createTurnFromTurn(Turn* t){
     Turn* result;
-    result = createTurn();
+    result = (Turn*)malloc(sizeof(Turn));
     result->x = t->x;
-    result->y = t->x;
-    result->TR = t->TR;
-    result->T = t->T;
-    result->TL = t->TL;
-    result->L = t->L;
-    result->BL = t->BL;
-    result->B = t->B;
-    result->BR = t->BR;
-    result->R = t->R;
+    result->y = t->y;
+    result->board = t->board;
+    result->color = t->color;
     return result;
 }
 
