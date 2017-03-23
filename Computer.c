@@ -3,14 +3,14 @@
 #include <stdio.h>
 
 const int posTable[8][8] = {
-{5, 4, 3, 2, 2, 3, 4, 5},
-{4, -3, 0, 0, 0, 0, -3, 4},
-{3, 0, 0, 0, 0, 0, 0, 3},
-{2, 0, 0, 0, 0, 0, 0, 2},
-{2, 0, 0, 0, 0, 0, 0, 2},
-{3, 0, 0, 0, 0, 0, 0, 3},
-{4, -3, 0, 0, 0, 0, -3, 4},
-{5, 4, 3, 2, 2, 3, 4, 5}
+   { 100, -25, 10, 5, 5, 10, -25,  100,},
+   {-25, -25,  1, 1, 1,  1, -25, -25,},
+   { 10,   1,  5, 2, 2,  5,   1,  10,},
+   {  5,   1,  2, 1, 1,  2,   1,   5,},
+   {  5,   1,  2, 1, 1,  2,   1,   5,},
+   { 10,   1,  5, 2, 2,  5,   1,  10,},
+   {-25, -25,  1, 1, 1,  1, -25, -25,},
+   { 100, -25, 10, 5, 5, 10, -25,  100,}
 };
 
 Computer* createComputer(Board* b, short player){
@@ -40,9 +40,9 @@ Turn* makeMove(Computer* c){
     Turn* t;
     float maxh, heuristic;
     short otherTurn;
-    maxh = -1;
-    alpha = -1;
-    beta = 1;
+    maxh = -1000;
+    alpha = -1000;
+    beta = 1000;
     if(c->player == BLACK){
         otherTurn = WHITE;
     } else {
@@ -56,8 +56,9 @@ Turn* makeMove(Computer* c){
         t = itr->turn;
         flipCaptured(b, t, c->player);
         fillOpenMoves(b, otherTurn);
+
         //System.out.println("ROOT:Processing child from root made with Turn:" + t.toString());
-        heuristic = processNode(4, otherTurn, b, c, alpha, beta);
+        heuristic = processNode(5, otherTurn, b, c, alpha, beta);
         if(heuristic > maxh){
             maxh = heuristic; max = t;
             alpha = heuristic;
@@ -70,12 +71,12 @@ Turn* makeMove(Computer* c){
 }
 
 float processNode(int levelsLeft, int player, Board* board, Computer* callback, float alpha, float beta){
+
     MoveNode* itr;
     Board* b;
     Turn* t;
-    float maxh, minh, heuristic;
+    float best, heuristic;
     short otherTurn;
-    maxh = -1; minh = 1;
     if(callback->player == BLACK){
         otherTurn = WHITE;
     } else {
@@ -84,16 +85,56 @@ float processNode(int levelsLeft, int player, Board* board, Computer* callback, 
     itr = board->openMoves->head;
 
     if(isMoveListEmpty(board->openMoves)){
-        if(mostPieces(board) == callback->player) return 1;
-        if(mostPieces(board) == EMPTY) return 0;
-        else return -1;
+        return getHeuristic(callback, board);
     }
     if(levelsLeft == 0){
         return getHeuristic(callback, board);
     } else {
-        while(itr->next != NULL_PTR){
-            if( alpha < beta){
-                    printf("alpha: %f, beta: %f", alpha, beta);
+       if(player == callback->player){
+            best = alpha;
+                while(itr->next != NULL_PTR){
+               // printf("alpha: %f, beta: %f", alpha, beta);
+
+                b = createBoardFromBoard(board);
+                t = itr->turn;
+                flipCaptured(b, t, callback->player);
+                fillOpenMoves(b, otherTurn);
+                //System.out.println("ROOT:Processing child from root made with Turn:" + t.toString());
+                heuristic = processNode(levelsLeft-1, otherTurn, b, callback, best, beta);
+                if(heuristic > best) best = heuristic;
+                if(beta <= best) break;
+
+                itr = itr->next;
+                destroyBoard(b);
+
+            }
+
+       } else {
+            best = beta;
+                       while(itr->next != NULL_PTR){
+               // printf("alpha: %f, beta: %f", alpha, beta);
+
+                b = createBoardFromBoard(board);
+                t = itr->turn;
+                flipCaptured(b, t, callback->player);
+                fillOpenMoves(b, otherTurn);
+                //System.out.println("ROOT:Processing child from root made with Turn:" + t.toString());
+                heuristic = processNode(levelsLeft-1, callback->player, b, callback, alpha, best);
+                if(heuristic < best) best = heuristic;
+                if(best <= alpha) break;
+
+                itr = itr->next;
+                destroyBoard(b);
+            }
+       }
+       return best;
+    }
+}
+/*
+ while(itr->next != NULL_PTR){
+                printf("running  at level %i\n", levelsLeft);
+            if( 1){
+                   // printf("alpha: %f, beta: %f", alpha, beta);
                 b = createBoardFromBoard(board);
                 t = itr->turn;
                 flipCaptured(b, t, callback->player);
@@ -102,20 +143,18 @@ float processNode(int levelsLeft, int player, Board* board, Computer* callback, 
                 heuristic = processNode(levelsLeft-1, otherTurn, b, callback, alpha, beta);
                 if(heuristic > maxh){
                     maxh = heuristic;
-                    if(player == callback->player){
-                        alpha = heuristic;
-                    }
+
                 }
+                if(heuristic > alpha) alpha = heuristic;
                 if(heuristic < minh){
                     minh = heuristic;
-                    if(player != callback->player){
-                        beta = heuristic;
-                    }
+
                 }
+                if(heuristic < beta) beta = heuristic;
                 destroyBoard(b);
                 itr = itr->next;
             }else {
-                printf("pruned tree \n");
+               printf("pruned tree \n");
                 itr = itr->next;
             }
         }
@@ -124,11 +163,10 @@ float processNode(int levelsLeft, int player, Board* board, Computer* callback, 
         } else {
             return minh;
         }
-    }
-}
-
+*/
 
 float getHeuristic(Computer* c, Board* b){
+
 /*    bs.fillOpenMoves(player);
     float ourmovecount = bs.getOpenMoves().size();
     bs.fillOpenMoves(player == 1 ? 2 : 1);
@@ -138,35 +176,41 @@ float getHeuristic(Computer* c, Board* b){
     //System.out.printf("heuristic formula calculated (%f - %f)/%f counter at %d result was %f", ourmovecount, oppmovecount, divisaor, counter++, result);
     return result;
 */
-        int ourMoveCount, oppmovecount, divisor;
-        short otherTurn;
-        float result;
-    if(countPieces(b, EMPTY) < 10){
-        ourMoveCount = countPieces(b, c->player);
-        if(c->player == BLACK){
-            otherTurn = WHITE;
-        } else {
-            otherTurn = BLACK;
-        }
-        oppmovecount = countPieces(b, otherTurn);
-        return 0;
-
-        //this is end game
+    short otherTurn;
+    int friendly_stones, enemy_stones, enemy_moves, friendly_moves, early_game, count_goodness, i, j, positional_goodness;
+    if(c->player == BLACK){
+        otherTurn = WHITE;
     } else {
-
-        fillOpenMoves(b, c->player);
-        ourMoveCount = getMoveListSize(b->openMoves);
-        if(c->player == BLACK){
-            otherTurn = WHITE;
-        } else {
-            otherTurn = BLACK;
-        }
-        fillOpenMoves(b, otherTurn);
-        oppmovecount = getMoveListSize(b->openMoves);
-        divisor = allAdjacentTiles(b);
-        result = ((((float)ourMoveCount) - ((float)oppmovecount)) / ((float)divisor));
-        return result;
+        otherTurn = BLACK;
     }
+    friendly_stones = countPieces(b, c->player);
+    printf("friendly stones %d\n", friendly_stones);
+    enemy_stones = countPieces(b, otherTurn);
+    if(friendly_stones + enemy_stones > 40){
+        early_game = 0;
+    } else {
+        early_game = 1;
+    }
+    if( early_game ){
+        // give-away in the early game
+        fillOpenMoves(b, c->player);
+        friendly_moves = getMoveListSize(b->openMoves);
+        fillOpenMoves(b, otherTurn);
+        enemy_moves = getMoveListSize(b->openMoves);
+        count_goodness = 0.1*( enemy_stones - friendly_stones );// + 1*(friendly_moves - enemy_moves);
+    }else{
+        // take-back later in the game
+        count_goodness = 1*( friendly_stones - enemy_stones );
+    }
+    positional_goodness = 0;
+    for(i = 0; i < 8; i++){
+        for(j = 0; j < 8; j++){
+            if(getTile(b, i, j) == c->player) positional_goodness += posTable[i][j];
+            if(getTile(b, i, j) == otherTurn) positional_goodness -= posTable[i][j];
+        }
+    }
+    printf("count_goodness is %d and positional_goodness is %d \n", count_goodness, positional_goodness);
+    return count_goodness + positional_goodness;
 
 }
 
