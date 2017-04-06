@@ -2,18 +2,20 @@
 #define COMPUTER_H_
 #include "Board.h"
 #include "Turn.h"
+#include "MiniMax.h"
 
 typedef struct tagComputer{
-    Board* board;
     short player;
+    MinimaxNode* root;
 } Computer;
 
 
 
-Computer* createComputer(Board* b, short player);
-void updateTree(Computer* computer, Turn* t, short player);
+Computer* createComputer(Board* b, short compplayer, short activeboardplayer);
+void updateTree(Computer* computer, Board* newb, short player);
 Turn* makeMove(Computer* c);
-float processNode(int levelsLeft, int player, Board* board, Computer* callback, float alpha, float beta);
+void fillNode(MinimaxNode* mn, Computer* callback);
+float processNode(int levelsLeft, MinimaxNode* node, Computer* callback, float alpha, float beta);
 float getHeuristic(Computer* c, Board* b);
 void destroyComputer(Computer* c);
 

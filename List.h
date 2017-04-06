@@ -3,7 +3,7 @@
 #include "Turn.h"
 #define NULL_PTR ((void*)0)
 typedef struct tagMoveNode{
-    struct MoveNode* next;
+    struct tagMoveNode* next;
     Turn* turn;
 } MoveNode;
 
@@ -23,5 +23,10 @@ void addTurnToMoveList(MoveList* ml, Turn* t);
 short isMoveListEmpty(MoveList* ml);
 int getMoveListSize(MoveList* ml);
 void destroyMoveList(MoveList* ml);
+Turn* getTurn(MoveList* ml, int number);
+
+
+
+
 
 #endif // LIST_H_

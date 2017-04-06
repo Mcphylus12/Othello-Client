@@ -1,3 +1,4 @@
+int TREEDEPTH;
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -8,6 +9,7 @@
 #include <windows.h>
 
 #define PI 3.14159265
+#define GL_CLAMP_TO_EDGE 0x812F
 
 typedef struct tagRect{
     float x;
@@ -44,6 +46,14 @@ void switchPlayer(){
     } else {
         activePlayer = BLACK;
     }
+}
+
+void startnewgame(){
+    b = createBoard();
+    playerColor = BLACK;
+    activePlayer = BLACK;
+    fillOpenMoves(b, activePlayer);
+    compOpp = createComputer(b, WHITE, activePlayer);
 }
 
 void renderScene(void) {
@@ -103,7 +113,7 @@ void renderScene(void) {
         glLoadIdentity();
         itr = itr->next;
     }
-    glColor4f(1.0, 1.0, 1.0, 0.1);
+    glColor4f(0.0, 0.0, 0.0, 0.1);
     glBindTexture(GL_TEXTURE_2D, newGame);
     glBegin(GL_QUADS);
             glTexCoord2f(1, 1);glVertex3f(newButton.x, screenBounds.height - newButton.y, 0.0f);
@@ -130,17 +140,13 @@ void processKeyboard(int button, int state, int x, int y){
     MoveNode* itr;
     Turn* itrTurn;
     Turn* compTurn;
-    char* winString;
+    char winString[50];
     goodMove = 0;
     if(button == GLUT_LEFT_BUTTON && state == GLUT_DOWN){
         if(contains(&newButton, x, y)){
             destroyBoard(b);
             destroyComputer(compOpp);
-            b = createBoard();
-            playerColor = BLACK;
-            activePlayer = BLACK;
-            compOpp = createComputer(b, WHITE);
-            fillOpenMoves(b, activePlayer);
+            startnewgame();
         } else if(contains(&quiButton, x, y)){
             destroyBoard(b);
             destroyComputer(compOpp);
@@ -155,7 +161,6 @@ void processKeyboard(int button, int state, int x, int y){
                 if(isMoveListEmpty(b->openMoves)){
                     printf("Move List was empty\n");
                 } else {
-                    printf("moveList was populated\n");
                     itr = b->openMoves->head;
                     while(itr != NULL_PTR){
                         itrTurn = itr->turn;
@@ -169,10 +174,12 @@ void processKeyboard(int button, int state, int x, int y){
                         printf("move was good\n");
                         flipCaptured(b, itrTurn, activePlayer);
                         printf("pieces captured\n");
+                        switchPlayer();
+
                         if(fillOpenMoves(b, activePlayer)){
-                                renderScene();
-                        blackcount = countPieces(b, BLACK);
-                        whitecount = countPieces(b, WHITE);
+                            renderScene();
+                            blackcount = countPieces(b, BLACK);
+                            whitecount = countPieces(b, WHITE);
                             if(whitecount > blackcount){
                                 sprintf(winString, "White Wins with %i counters to Black's %i\nPlay Again?", whitecount, blackcount);
                             }else if(whitecount < blackcount){
@@ -184,11 +191,7 @@ void processKeyboard(int button, int state, int x, int y){
                             if(result == IDYES){
                                 destroyBoard(b);
                                 destroyComputer(compOpp);
-                                b = createBoard();
-                                playerColor = BLACK;
-                                activePlayer = BLACK;
-                                compOpp = createComputer(b, WHITE);
-                                fillOpenMoves(b, activePlayer);
+                                startnewgame();
                                 return;
                             } else {
                                 destroyBoard(b);
@@ -197,20 +200,19 @@ void processKeyboard(int button, int state, int x, int y){
                             }
                         }
                         renderScene();
-                        updateTree(compOpp, itrTurn, activePlayer);
+                        updateTree(compOpp, b, activePlayer);
                         printf("computer data updated\n");
                         compTurn = makeMove(compOpp);
                         printf("computer calculated move at %i, %i\n", compTurn->x, compTurn->y);
-                        switchPlayer();
                         flipCaptured(b, compTurn, activePlayer);
-                        printf("computer pieces captured\n");
                         switchPlayer();
+                        printf("computer pieces captured\n");
                         //fillOpenMoves(b, activePlayer);
                         //commene
                         if(fillOpenMoves(b, activePlayer)){
                             renderScene();
-                        blackcount = countPieces(b, BLACK);
-                        whitecount = countPieces(b, WHITE);
+                            blackcount = countPieces(b, BLACK);
+                            whitecount = countPieces(b, WHITE);
                             if(whitecount > blackcount){
                                 sprintf(winString, "White Wins with %i counters to Black's %i\nPlay Again?", whitecount, blackcount);
                             }else if(whitecount < blackcount){
@@ -225,7 +227,7 @@ void processKeyboard(int button, int state, int x, int y){
                                 b = createBoard();
                                 playerColor = BLACK;
                                 activePlayer = BLACK;
-                                compOpp = createComputer(b, WHITE);
+                                compOpp = createComputer(b, WHITE, activePlayer);
                                 fillOpenMoves(b, activePlayer);
                                 return;
                             } else {
@@ -236,10 +238,8 @@ void processKeyboard(int button, int state, int x, int y){
                         }
                         renderScene();
                         printf("moves filled\n");
-                        switchPlayer();
-                        updateTree(compOpp, compTurn, activePlayer);
+                        updateTree(compOpp, b, activePlayer);
                         printf("computer data updated again\n");
-                        switchPlayer();
                         destroyTurn(compTurn);
                         printf("turn destroyed\n");
                     }
@@ -250,8 +250,16 @@ void processKeyboard(int button, int state, int x, int y){
     }
 }
 
+
+void resize(int width, int height) {
+    // we ignore the params and do:
+    glutReshapeWindow( 1000, 600);
+};
+
 int main(int argc, char **argv)
 {
+
+    glEnable(GL_BLEND);
     glEnable(GL_TEXTURE_2D);
     boardBounds.x = 300;
     boardBounds.y = 00;
@@ -275,7 +283,7 @@ int main(int argc, char **argv)
 	glutInitWindowPosition(screenBounds.x, screenBounds.y);
 	glutInitWindowSize(screenBounds.width, screenBounds.height);
 	glutCreateWindow("Lighthouse3D - GLUT Tutorial");
-
+    glutReshapeFunc(resize);
 
     newGame = SOIL_load_OGL_texture
 	(
@@ -289,8 +297,10 @@ int main(int argc, char **argv)
         printf( "SOIL loading error: '%s'\n", SOIL_last_result() );
     }
     glBindTexture(GL_TEXTURE_2D, newGame);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     quit = SOIL_load_OGL_texture
 	(
 		"quit.png",
@@ -299,8 +309,10 @@ int main(int argc, char **argv)
 		SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | SOIL_FLAG_NTSC_SAFE_RGB | SOIL_FLAG_COMPRESS_TO_DXT
 	);
     glBindTexture(GL_TEXTURE_2D, quit);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	// register callbacks
 	glutDisplayFunc(renderScene);
 
@@ -310,11 +322,8 @@ int main(int argc, char **argv)
 	glClearColor(0.133, 0.545, 0.133, 1.0);
     glLineWidth(2.0f);
 
-    b = createBoard();
-    playerColor = BLACK;
-    activePlayer = BLACK;
-    compOpp = createComputer(b, WHITE);
-    fillOpenMoves(b, activePlayer);
+    startnewgame();
+
 
 	glutMainLoop();
 

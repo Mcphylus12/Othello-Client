@@ -144,11 +144,11 @@ int countPieces(Board* b, short color){
     } else return 0;
 }
 
-short fillOpenMoves(Board* b, int activePlayer){
+short fillOpenMoves(Board* b, short pactivePlayer){
     short goodMove, k, i, j, counter, otherTurn, xdir, ydir;
     Turn* t;
     uint64_t board, tempBoard;
-    if(activePlayer == BLACK){
+    if(pactivePlayer == BLACK){
         otherTurn = WHITE;
     } else {
         otherTurn = BLACK;
@@ -176,7 +176,7 @@ short fillOpenMoves(Board* b, int activePlayer){
                             setTilel(&tempBoard, i + counter*xdir, j + counter*ydir);
                         } else if(getTile(b, i + counter*xdir, j + counter*ydir) == EMPTY){
                             break;
-                        } else if(getTile(b, i + counter*xdir, j + counter*ydir) == activePlayer){
+                        } else if(getTile(b, i + counter*xdir, j + counter*ydir) == pactivePlayer){
                             board = board | tempBoard;
                             break;
                         }
@@ -186,7 +186,7 @@ short fillOpenMoves(Board* b, int activePlayer){
 
            }
            if(board){
-                t = createTurn(i, j, board, activePlayer);
+                t = createTurn(i, j, board, pactivePlayer);
                 addTurnToMoveList(b->openMoves, t);
            }
 
@@ -195,13 +195,13 @@ short fillOpenMoves(Board* b, int activePlayer){
     return isMoveListEmpty(b->openMoves);
 }
 
-void flipCaptured(Board* b, Turn* newPiece, int activePlayer){
-    if(activePlayer == WHITE){
+void flipCaptured(Board* b, Turn* newPiece, short pactivePlayer){
+    if(pactivePlayer == WHITE){
         b->white = b->white | newPiece->board;
         b->black = b->black & (~newPiece->board);
     }
 
-    if(activePlayer == BLACK){
+    if(pactivePlayer == BLACK){
         b->black = b->black | newPiece->board;
         b->white = b->white & (~newPiece->board);
     }
@@ -219,4 +219,9 @@ int mostPieces(Board* b){
 void destroyBoard(Board* board){
     destroyMoveList(board->openMoves);
     free(board);
+}
+
+int compareBoards(Board* b1, Board* b2){
+    if(b1->black == b2->black && b1->white == b2->white) return 0;
+    return 1;
 }

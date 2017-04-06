@@ -8,6 +8,8 @@ extern const short EMPTY;
 extern const short WHITE;
 extern const short BLACK;
 
+struct MoveList;
+
 typedef struct tagBoard {
     uint64_t white;
     uint64_t black;
@@ -25,9 +27,10 @@ void setTile(Board* b, short color, short i, short j);
 unsigned short getTilel(uint64_t board, short i, short j);
 void setTilel(uint64_t* board, short i, short j);
 int allAdjacentTiles(Board* b);
-short fillOpenMoves(Board* b, int activePlayer);
-void flipCaptured(Board* b, Turn* newPiece, int activePlayer);
+short fillOpenMoves(Board* b, short pactivePlayer);
+void flipCaptured(Board* b, Turn* newPiece, short pactivePlayer);
 int mostPieces(Board* b);
 void destroyBoard(Board* board);
 int countPieces(Board* b, short color);
+int compareBoards(Board* b1, Board* b2);
 #endif // BOARD_H_

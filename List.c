@@ -95,8 +95,24 @@ int getMoveListSize(MoveList* ml){
     }
 }
 
+Turn* getTurn(MoveList* ml, int number){
+    MoveNode* itr;
+    int count = 0;
+    itr = ml->head;
+
+    while(itr != NULL_PTR){
+        if(count == number){
+            return itr->turn;
+        }
+        count++;
+        itr = itr->next;
+    }
+}
+
 void destroyMoveList(MoveList* ml){
     clearList(ml);
     free(ml);
 }
+
+
 
