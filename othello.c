@@ -218,7 +218,6 @@ void processKeyboard(int button, int state, int x, int y){
                 if(isMoveListEmpty(b->openMoves)){
                     printf("Move List was empty\n");
                 } else {
-                    itrTurn = NULL_PTR;
                     itr = b->openMoves->head;
                     while(itr != NULL_PTR){
                         itrTurn = itr->turn;
@@ -230,45 +229,26 @@ void processKeyboard(int button, int state, int x, int y){
                     }
                     if(goodMove){
                         printf("move was good\n");
-                        if(itrTurn != NULL_PTR){
-                           flipCaptured(b, itrTurn, activePlayer);
-                        }
+                        flipCaptured(b, itrTurn, activePlayer);
                         printf("pieces captured\n");
                         switchPlayer();
 
                         if(fillOpenMoves(b, activePlayer)){
-                            if(deadMoves == 0){
-                                deadMoves++;
-                            } else if(deadMoves == 1){
-                                endPopup();
-                            }
+                            endPopup();
 
-
-                        } else {
-                            deadMoves = 0;
                         }
                         renderScene();
                         updateTree(compOpp, b, activePlayer);
                         printf("computer data updated\n");
                         compTurn = makeMove(compOpp);
                         printf("computer calculated move at %i, %i\n", compTurn->x, compTurn->y);
-                        if(compTurn != NULL_PTR){
-                            flipCaptured(b, compTurn, activePlayer);
-                        }
+                        flipCaptured(b, compTurn, activePlayer);
                         switchPlayer();
                         printf("computer pieces captured\n");
                         //fillOpenMoves(b, activePlayer);
                         //commene
                         if(fillOpenMoves(b, activePlayer)){
-                            if(deadMoves == 0){
-                                deadMoves++;
-                            } else if(deadMoves == 1){
-                                endPopup();
-                            }
-
-
-                        } else {
-                            deadMoves = 0;
+                            endPopup();
                         }
                         renderScene();
                         printf("moves filled\n");
