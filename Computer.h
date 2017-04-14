@@ -15,7 +15,7 @@ Computer* createComputer(Board* b, short compplayer, short activeboardplayer);
 void updateTree(Computer* computer, Board* newb, short player);
 Turn* makeMove(Computer* c);
 void fillNode(MinimaxNode* mn, Computer* callback);
-float processNode(int levelsLeft, MinimaxNode* node, Computer* callback, float alpha, float beta);
+float processNode(int levelsLeft, MinimaxNode* node, Computer* callback, float alpha, float beta, short deadMoves);
 float getHeuristic(Computer* c, Board* b);
 void destroyComputer(Computer* c);
 

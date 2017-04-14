@@ -1,4 +1,7 @@
 int TREEDEPTH;
+
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -24,10 +27,17 @@ Rect screenBounds;
 Rect newButton;
 Rect quiButton;
 
+short deadMoves;
 Computer* compOpp;
 short playerColor;
+short compPlayer;
 short activePlayer;
 Board* b;
+
+short otherPlayer(short player){
+    if(player == WHITE) return BLACK;
+    return WHITE;
+}
 
 short contains(Rect* rect, int x, int y){
     if(x < rect->x ||
@@ -48,12 +58,35 @@ void switchPlayer(){
     }
 }
 
-void startnewgame(){
+void startnewgame(short tempplayerColor){
+    short result;
+    Turn* t;
+    deadMoves = 0;
     b = createBoard();
-    playerColor = BLACK;
+    result = MessageBox(NULL, "Would you like to go first", "Would you like to go first", MB_YESNO);
+    if(result == IDYES){
+        playerColor = BLACK;
+    } else {
+        playerColor = WHITE;
+    }
+    compPlayer = otherPlayer(playerColor);
     activePlayer = BLACK;
+
+
+
     fillOpenMoves(b, activePlayer);
-    compOpp = createComputer(b, WHITE, activePlayer);
+    compOpp = createComputer(b, compPlayer, activePlayer);
+    if(activePlayer == compPlayer){
+        t = makeMove(compOpp);
+        flipCaptured(b, t, activePlayer);
+        switchPlayer();
+        fillOpenMoves(b, activePlayer);
+        updateTree(compOpp, b, activePlayer);
+    }
+}
+void endGame(){
+    destroyBoard(b);
+    destroyComputer(compOpp);
 }
 
 void renderScene(void) {
@@ -133,20 +166,44 @@ void renderScene(void) {
 
 }
 
+void endPopup(){
+        char winString[50];
+        int blackcount, whitecount, result;
+    renderScene();
+    blackcount = countPieces(b, BLACK);
+    whitecount = countPieces(b, WHITE);
+    if(whitecount > blackcount){
+        sprintf(winString, "White Wins with %i counters to Black's %i\nPlay Again?", whitecount, blackcount);
+    }else if(whitecount < blackcount){
+        sprintf(winString, "Black Wins with %i counters to Whites's %i\nPlay Again?", blackcount, whitecount);
+    } else {
+        sprintf(winString, "A draw with both players have %i counters\nPlay Again?", whitecount);
+    }
+    result = MessageBox(NULL, winString, "Game Over", MB_YESNO);
+    if(result == IDYES){
+        endGame();
+        startnewgame(BLACK);
+        return;
+    } else {
+        destroyBoard(b);
+        destroyComputer(compOpp);
+        exit(0);
+    }
+}
+
 void processKeyboard(int button, int state, int x, int y){
     printf("Clicked\n");
-    int boardx, boardy, result, blackcount, whitecount;
+    int boardx, boardy;
     short cellX, cellY, goodMove;
     MoveNode* itr;
     Turn* itrTurn;
     Turn* compTurn;
-    char winString[50];
+
     goodMove = 0;
     if(button == GLUT_LEFT_BUTTON && state == GLUT_DOWN){
         if(contains(&newButton, x, y)){
-            destroyBoard(b);
-            destroyComputer(compOpp);
-            startnewgame();
+            endGame();
+            startnewgame(BLACK);
         } else if(contains(&quiButton, x, y)){
             destroyBoard(b);
             destroyComputer(compOpp);
@@ -161,6 +218,7 @@ void processKeyboard(int button, int state, int x, int y){
                 if(isMoveListEmpty(b->openMoves)){
                     printf("Move List was empty\n");
                 } else {
+                    itrTurn = NULL_PTR;
                     itr = b->openMoves->head;
                     while(itr != NULL_PTR){
                         itrTurn = itr->turn;
@@ -172,69 +230,45 @@ void processKeyboard(int button, int state, int x, int y){
                     }
                     if(goodMove){
                         printf("move was good\n");
-                        flipCaptured(b, itrTurn, activePlayer);
+                        if(itrTurn != NULL_PTR){
+                           flipCaptured(b, itrTurn, activePlayer);
+                        }
                         printf("pieces captured\n");
                         switchPlayer();
 
                         if(fillOpenMoves(b, activePlayer)){
-                            renderScene();
-                            blackcount = countPieces(b, BLACK);
-                            whitecount = countPieces(b, WHITE);
-                            if(whitecount > blackcount){
-                                sprintf(winString, "White Wins with %i counters to Black's %i\nPlay Again?", whitecount, blackcount);
-                            }else if(whitecount < blackcount){
-                                sprintf(winString, "Black Wins with %i counters to Whites's %i\nPlay Again?", blackcount, whitecount);
-                            } else {
-                                sprintf(winString, "A draw with both players have %i counters\nPlay Again?", whitecount);
+                            if(deadMoves == 0){
+                                deadMoves++;
+                            } else if(deadMoves == 1){
+                                endPopup();
                             }
-                            result = MessageBox(NULL, winString, "Game Over", MB_YESNO);
-                            if(result == IDYES){
-                                destroyBoard(b);
-                                destroyComputer(compOpp);
-                                startnewgame();
-                                return;
-                            } else {
-                                destroyBoard(b);
-                                destroyComputer(compOpp);
-                                exit(0);
-                            }
+
+
+                        } else {
+                            deadMoves = 0;
                         }
                         renderScene();
                         updateTree(compOpp, b, activePlayer);
                         printf("computer data updated\n");
                         compTurn = makeMove(compOpp);
                         printf("computer calculated move at %i, %i\n", compTurn->x, compTurn->y);
-                        flipCaptured(b, compTurn, activePlayer);
+                        if(compTurn != NULL_PTR){
+                            flipCaptured(b, compTurn, activePlayer);
+                        }
                         switchPlayer();
                         printf("computer pieces captured\n");
                         //fillOpenMoves(b, activePlayer);
                         //commene
                         if(fillOpenMoves(b, activePlayer)){
-                            renderScene();
-                            blackcount = countPieces(b, BLACK);
-                            whitecount = countPieces(b, WHITE);
-                            if(whitecount > blackcount){
-                                sprintf(winString, "White Wins with %i counters to Black's %i\nPlay Again?", whitecount, blackcount);
-                            }else if(whitecount < blackcount){
-                                sprintf(winString, "Black Wins with %i counters to Whites's %i\nPlay Again?", blackcount, whitecount);
-                            } else {
-                                sprintf(winString, "A draw with both players have %i counters\nPlay Again?", whitecount);
+                            if(deadMoves == 0){
+                                deadMoves++;
+                            } else if(deadMoves == 1){
+                                endPopup();
                             }
-                            result = MessageBox(NULL, winString, "Game Over", MB_YESNO);
-                            if(result == IDYES){
-                                destroyBoard(b);
-                                destroyComputer(compOpp);
-                                b = createBoard();
-                                playerColor = BLACK;
-                                activePlayer = BLACK;
-                                compOpp = createComputer(b, WHITE, activePlayer);
-                                fillOpenMoves(b, activePlayer);
-                                return;
-                            } else {
-                                destroyBoard(b);
-                                destroyComputer(compOpp);
-                                exit(0);
-                            }
+
+
+                        } else {
+                            deadMoves = 0;
                         }
                         renderScene();
                         printf("moves filled\n");
@@ -322,7 +356,8 @@ int main(int argc, char **argv)
 	glClearColor(0.133, 0.545, 0.133, 1.0);
     glLineWidth(2.0f);
 
-    startnewgame();
+    startnewgame(WHITE);
+
 
 
 	glutMainLoop();

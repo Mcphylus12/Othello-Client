@@ -88,26 +88,39 @@ void fillNode(MinimaxNode* mn, Computer* callback){
     //printf("node filled \n");
 }
 
+int mincmpfunc (const void * a, const void * b)
+{
+    MinimaxNode* ma = (MinimaxNode*)a;
+    MinimaxNode* mb = (MinimaxNode*)b;
+   return ( ma->heuristic - mb->heuristic );
+}
+
+int maxcmpfunc (const void * a, const void * b)
+{
+   MinimaxNode* ma = (MinimaxNode*)a;
+    MinimaxNode* mb = (MinimaxNode*)b;
+   return ( mb->heuristic - ma->heuristic );
+}
+
+
 Turn* makeMove(Computer* c){
     float alpha, beta;
     Turn* max;
     int count;
     float maxh, heuristic;
-    short otherTurn;
+
     maxh = -1000;
     alpha = -1000;
     beta = 1000;
-    if(c->player == BLACK){
-        otherTurn = WHITE;
-    } else {
-        otherTurn = BLACK;
-    }
+
     max = c->root->board->openMoves->head->turn;
     if(c->root->childrenProcessed == 0){
         fillNode(c->root, c);
     } else {
         printf("node already created at depth ROOT\n");
     }
+    qsort(c->root->children, c->root->noChildren, sizeof(MinimaxNode), maxcmpfunc);
+
     for(count = 0; count < c->root->noChildren; count++){
 
 
@@ -131,12 +144,7 @@ float processNode(int levelsLeft, MinimaxNode* node, Computer* callback, float a
 
     int count;
     float best, heuristic;
-    short otherTurn;
-    if(callback->player == BLACK){
-        otherTurn = WHITE;
-    } else {
-        otherTurn = BLACK;
-    }
+
 
     if(isMoveListEmpty(node->board->openMoves)){
         return getHeuristic(callback, node->board);
@@ -153,6 +161,7 @@ float processNode(int levelsLeft, MinimaxNode* node, Computer* callback, float a
             } else {
                 printf("node already created at depth %i\n", levelsLeft);
             }
+                qsort(node->children, node->noChildren, sizeof(MinimaxNode), maxcmpfunc);
                 for(count = 0; count < node->noChildren; count++){
                // printf("alpha: %f, beta: %f", alpha, beta);
 
@@ -176,6 +185,7 @@ float processNode(int levelsLeft, MinimaxNode* node, Computer* callback, float a
             } else {
                 printf("node already created at depth %i\n", levelsLeft);
             }
+            qsort(node->children, node->noChildren, sizeof(MinimaxNode), mincmpfunc);
                 for(count = 0; count < node->noChildren; count++){
                // printf("alpha: %f, beta: %f", alpha, beta);
 
@@ -240,7 +250,7 @@ float getHeuristic(Computer* c, Board* b){
     return result;
 */
     short otherTurn;
-    int friendly_stones, enemy_stones, enemy_moves, friendly_moves, early_game, count_goodness, i, j, positional_goodness;
+    int friendly_stones, enemy_stones, early_game, count_goodness, i, j, positional_goodness;
     if(c->player == BLACK){
         otherTurn = WHITE;
     } else {
@@ -257,9 +267,7 @@ float getHeuristic(Computer* c, Board* b){
     if( early_game ){
         // give-away in the early game
         //fillOpenMoves(b, c->player);
-        friendly_moves = 1;
         //fillOpenMoves(b, otherTurn);
-        enemy_moves = 1;
         count_goodness = 0.1*( enemy_stones - friendly_stones );// + 1*(friendly_moves - enemy_moves);
     }else{
         // take-back later in the game
