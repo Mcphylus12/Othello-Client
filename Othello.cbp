@@ -29,6 +29,7 @@
 				<Linker>
 					<Add option="-s" />
 					<Add library="lib/libSOIL.a" />
+					<Add library="lib/OpenGL32.Lib" />
 				</Linker>
 			</Target>
 		</Build>

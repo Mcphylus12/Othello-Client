@@ -25,7 +25,7 @@ Computer* createComputer(Board* b, short compplayer, short activeboardplayer){
     result->root->childrenProcessed = 0;
     result->root->heuristic = getHeuristic(result, result->root->board);
     result->root->player = activeboardplayer;
-    processNode(TREEDEPTH, result->root, result, -1000, 1000);
+    processNode(TREEDEPTH, result->root, result, -1000, 1000, 0);
     return result;
 }
 
@@ -126,7 +126,7 @@ Turn* makeMove(Computer* c){
 
 
         //System.out.println("ROOT:Processing child from root made with Turn:" + t.toString());
-        heuristic = processNode(TREEDEPTH, &c->root->children[count], c, alpha, beta);
+        heuristic = processNode(TREEDEPTH, &c->root->children[count], c, alpha, beta, 0);
         if(heuristic > maxh){
             maxh = heuristic;
             max = getTurn(c->root->board->openMoves, count);
@@ -139,15 +139,35 @@ Turn* makeMove(Computer* c){
 
 }
 
-float processNode(int levelsLeft, MinimaxNode* node, Computer* callback, float alpha, float beta){
+float processNode(int levelsLeft, MinimaxNode* node, Computer* callback, float alpha, float beta, short deadMoves){
 
 
     int count;
     float best, heuristic;
-
+    short otherTurn;
+    if(node->player == BLACK){
+        otherTurn = WHITE;
+    } else {
+        otherTurn = BLACK;
+    }
 
     if(isMoveListEmpty(node->board->openMoves)){
-        return getHeuristic(callback, node->board);
+        deadMoves++;
+        if(deadMoves == 2){
+            return getHeuristic(callback, node->board);
+        }
+        if(node->childrenProcessed == 0){
+            node->children = 1;
+            node->children = malloc(sizeof(MinimaxNode));
+            node->children[0].board = createBoardFromBoard(node->board);
+            node->children[0].player = otherTurn;
+            node->children[0].childrenProcessed = 0;
+            fillOpenMoves(node->children[0].board, otherTurn);
+            node->children[0].heuristic = getHeuristic(callback, node->children[0].board);
+        }
+        return processNode(levelsLeft, &node->children[0], callback, alpha, beta, deadMoves);
+    } else {
+        deadMoves = 0;
     }
     if(levelsLeft == 0){
         return getHeuristic(callback, node->board);
@@ -166,7 +186,7 @@ float processNode(int levelsLeft, MinimaxNode* node, Computer* callback, float a
                // printf("alpha: %f, beta: %f", alpha, beta);
 
                 //System.out.println("ROOT:Processing child from root made with Turn:" + t.toString());
-                heuristic = processNode(levelsLeft-1, &node->children[count], callback, best, beta);
+                heuristic = processNode(levelsLeft-1, &node->children[count], callback, best, beta, deadMoves);
                 if(heuristic > best) best = heuristic;
                 if(beta <= best) {
 
@@ -190,7 +210,7 @@ float processNode(int levelsLeft, MinimaxNode* node, Computer* callback, float a
                // printf("alpha: %f, beta: %f", alpha, beta);
 
                 //System.out.println("ROOT:Processing child from root made with Turn:" + t.toString());
-                heuristic = processNode(levelsLeft-1, node->children+count, callback, alpha, best);
+                heuristic = processNode(levelsLeft-1, node->children+count, callback, alpha, best, deadMoves);
                 if(heuristic < best) best = heuristic;
                 if(best <= alpha) {
                         printf("\tpruning");

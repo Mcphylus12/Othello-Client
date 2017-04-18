@@ -13,6 +13,7 @@ int TREEDEPTH;
 
 #define PI 3.14159265
 #define GL_CLAMP_TO_EDGE 0x812F
+#define boardboundoff 10
 
 typedef struct tagRect{
     float x;
@@ -20,12 +21,25 @@ typedef struct tagRect{
     float width;
     float height;
 } Rect;
-GLuint newGame;
-GLuint quit;
+
+
+
+GLuint boardtex;
+GLuint boardtex2;
+GLuint whitetex;
+GLuint blacktex;
 Rect boardBounds;
 Rect screenBounds;
+
+GLuint newGame;
 Rect newButton;
+
+GLuint quit;
 Rect quiButton;
+
+GLuint toggletex;
+Rect toggle;
+short displayMoves;
 
 short deadMoves;
 Computer* compOpp;
@@ -98,68 +112,82 @@ void renderScene(void) {
 	glOrtho(0, screenBounds.width, 0, screenBounds.height, -1, 1);
 
 	glMatrixMode(GL_MODELVIEW);
-    glColor3f(0, 0, 0);
-	glBegin(GL_LINES);
-	glVertex3f(boardBounds.x, boardBounds.y, 0.0f); glVertex3f(boardBounds.x, boardBounds.y + boardBounds.height, 0.0f);
-    glVertex3f(boardBounds.x, boardBounds.y, 0.0f); glVertex3f(boardBounds.x + boardBounds.width, boardBounds.y, 0.0f);
-    glVertex3f(boardBounds.x + boardBounds.width, boardBounds.y, 0.0f); glVertex3f(boardBounds.x + boardBounds.width, boardBounds.y + boardBounds.height, 0.0f);
-    glVertex3f(boardBounds.x, boardBounds.y + boardBounds.height, 0.0f); glVertex3f(boardBounds.x + boardBounds.width, boardBounds.y + boardBounds.height, 0.0f);
-
-
-        for (i = 1 ; i <= 7; i++){
-            glVertex3f(boardBounds.x + boardBounds.width/8*i, boardBounds.y, 0.0f); glVertex3f(boardBounds.x + boardBounds.width/8*i, boardBounds.y + boardBounds.height, 0.0f);
-            //g.drawLine(boardBounds.x + boardBounds.width/8*i, boardBounds.y, boardBounds.x + boardBounds.width/8*i, boardBounds.y + boardBounds.height);
-
-            glVertex3f(boardBounds.x, boardBounds.y + boardBounds.height/8*i, 0.0f); glVertex3f(boardBounds.x + boardBounds.width, boardBounds.y + boardBounds.height/8*i, 0.0f);
-            //g.drawLine(boardBounds.x, boardBounds.y + boardBounds.height/8*i, boardBounds.x + boardBounds.width, boardBounds.y + boardBounds.height/8*i);
-        }
+	glBindTexture(GL_TEXTURE_2D, boardtex);
+	glBegin(GL_QUADS);
+        glTexCoord2f(0, 1);glVertex3f(0, 0 + screenBounds.height, 0.0f);
+        glTexCoord2f(1, 1);glVertex3f(0 + screenBounds.width, 0 + screenBounds.height, 0.0f);
+        glTexCoord2f(1, 0);glVertex3f(0 + screenBounds.width, 0, 0.0f);
+        glTexCoord2f(0, 0);glVertex3f(0, 0, 0.0f);
 	glEnd();
-
+	glBindTexture(GL_TEXTURE_2D, boardtex2);
+    glColor3f(1, 1, 1);
+	glBegin(GL_QUADS);
+        glTexCoord2f(0, 1);glVertex3f(boardBounds.x - boardboundoff, boardBounds.y - boardboundoff, 0.0f);
+        glTexCoord2f(1, 1);glVertex3f(boardBounds.x + boardBounds.width + boardboundoff, boardBounds.y - boardboundoff, 0.0f);
+        glTexCoord2f(1, 0);glVertex3f(boardBounds.x + boardBounds.width + boardboundoff, boardBounds.height + boardBounds.y + boardboundoff, 0.0f);
+        glTexCoord2f(0, 0);glVertex3f(boardBounds.x - 10, boardBounds.height + boardBounds.y + boardboundoff, 0.0f);
+	glEnd();
+    glColor3f(1.0, 1.0, 1.0);
 	for(i = 0; i < 8; i++){
         for(j = 0; j < 8; j++){
             if(getTile(b, i, j) != EMPTY){
                 if(getTile(b, i, j) == BLACK){
-                    glColor3f(0, 0, 0);
+                    glBindTexture(GL_TEXTURE_2D, blacktex);
                 } else {
-                    glColor3f(1, 1, 1);
+                    glBindTexture(GL_TEXTURE_2D, whitetex);
                 }
-                glTranslatef(boardBounds.x + boardBounds.width/8*(i + 0.5), boardBounds.y + boardBounds.height/8*(8 - (j + 0.5)), 0);
-                glBegin(GL_POLYGON);
-                for(count = 0; count < 20; count ++){
-                    glVertex3f(sin(2*PI / 20 * count)*boardBounds.width/16, cos(2*PI / 20 * count)*boardBounds.height/16, 0.0f);
-                }
+                glTranslatef(boardBounds.x + boardBounds.width/8*(i), boardBounds.y + boardBounds.height/8*(8 - (j+1)), 0);
+                glBegin(GL_QUADS);
+                        glTexCoord2f(0, 1);glVertex3f(0, 0, 0.0f);
+                        glTexCoord2f(1, 1);glVertex3f(boardBounds.width/8, 0, 0.0f);
+                        glTexCoord2f(1, 0);glVertex3f(boardBounds.width/8, boardBounds.height/8, 0.0f);
+                        glTexCoord2f(0, 0);glVertex3f(0, boardBounds.height/8, 0.0f);
+                glEnd();
 
                 glEnd();
                 glLoadIdentity();
             }
         }
 	}
-	glColor3f(1.0, 0.0, 0.0);
-	itr = b->openMoves->head;
-    while(itr != NULL_PTR){
-        glTranslatef(boardBounds.x + boardBounds.width/8*(itr->turn->x + 0.5), boardBounds.y + boardBounds.height/8*(8 - (itr->turn->y + 0.5)), 0);
-        glBegin(GL_POLYGON);
-        for(count = 0; count < 20; count ++){
-            glVertex3f(sin(2*PI / 20 * count)*boardBounds.width/64, cos(2*PI / 20 * count)*boardBounds.height/64, 0.0f);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	if(displayMoves){
+        glColor3f(1.0, 0.0, 0.0);
+        itr = b->openMoves->head;
+        while(itr != NULL_PTR){
+            glTranslatef(boardBounds.x + boardBounds.width/8*(itr->turn->x + 0.5), boardBounds.y + boardBounds.height/8*(8 - (itr->turn->y + 0.5)), 0);
+            glBegin(GL_POLYGON);
+            for(count = 0; count < 20; count ++){
+                glVertex3f(sin(2*PI / 20 * count)*boardBounds.width/64, cos(2*PI / 20 * count)*boardBounds.height/64, 0.0f);
+            }
+            glEnd();
+            glLoadIdentity();
+            itr = itr->next;
         }
-        glEnd();
-        glLoadIdentity();
-        itr = itr->next;
-    }
-    glColor4f(0.0, 0.0, 0.0, 0.1);
+	}
+    glColor3f(1.0, 1.0, 1.0);
     glBindTexture(GL_TEXTURE_2D, newGame);
     glBegin(GL_QUADS);
-            glTexCoord2f(1, 1);glVertex3f(newButton.x, screenBounds.height - newButton.y, 0.0f);
-            glTexCoord2f(0, 1);glVertex3f(newButton.x + newButton.width, screenBounds.height - newButton.y, 0.0f);
-            glTexCoord2f(0, 0);glVertex3f(newButton.x + newButton.width, screenBounds.height - (newButton.y + newButton.height), 0.0f);
-            glTexCoord2f(1, 0);glVertex3f(newButton.x, screenBounds.height - (newButton.y + newButton.height), 0.0f);
-          glEnd();
-          glBindTexture(GL_TEXTURE_2D, quit);
+            glTexCoord2f(0, 1);glVertex3f(newButton.x, screenBounds.height - newButton.y, 0.0f);
+            glTexCoord2f(1, 1);glVertex3f(newButton.x + newButton.width, screenBounds.height - newButton.y, 0.0f);
+            glTexCoord2f(1, 0);glVertex3f(newButton.x + newButton.width, screenBounds.height - (newButton.y + newButton.height), 0.0f);
+            glTexCoord2f(0, 0);glVertex3f(newButton.x, screenBounds.height - (newButton.y + newButton.height), 0.0f);
+      glEnd();
+      glBindTexture(GL_TEXTURE_2D, quit);
+
       glBegin(GL_QUADS);
-            glTexCoord2f(0, 0);glVertex3f(quiButton.x, screenBounds.height - quiButton.y, 0.0f);
-            glTexCoord2f(0, 1);glVertex3f(quiButton.x + quiButton.width, screenBounds.height - quiButton.y, 0.0f);
-            glTexCoord2f(1, 1);glVertex3f(quiButton.x + newButton.width, screenBounds.height - (quiButton.y + quiButton.height), 0.0f);
-            glTexCoord2f(1, 0);glVertex3f(quiButton.x, screenBounds.height - (quiButton.y + quiButton.height), 0.0f);
+            glTexCoord2f(0, 1);glVertex3f(quiButton.x, screenBounds.height - quiButton.y, 0.0f);
+            glTexCoord2f(1, 1);glVertex3f(quiButton.x + quiButton.width, screenBounds.height - quiButton.y, 0.0f);
+            glTexCoord2f(1, 0);glVertex3f(quiButton.x + newButton.width, screenBounds.height - (quiButton.y + quiButton.height), 0.0f);
+            glTexCoord2f(0, 0);glVertex3f(quiButton.x, screenBounds.height - (quiButton.y + quiButton.height), 0.0f);
+          glEnd();
+
+      glBindTexture(GL_TEXTURE_2D, toggletex);
+
+      glBegin(GL_QUADS);
+            glTexCoord2f(0, 1);glVertex3f(toggle.x, screenBounds.height - toggle.y, 0.0f);
+            glTexCoord2f(1, 1);glVertex3f(toggle.x + toggle.width, screenBounds.height - toggle.y, 0.0f);
+            glTexCoord2f(1, 0);glVertex3f(toggle.x + toggle.width, screenBounds.height - (toggle.y + toggle.height), 0.0f);
+            glTexCoord2f(0, 0);glVertex3f(toggle.x, screenBounds.height - (toggle.y + toggle.height), 0.0f);
           glEnd();
     glBindTexture(GL_TEXTURE_2D, 0);
     glutSwapBuffers();
@@ -185,8 +213,7 @@ void endPopup(){
         startnewgame(BLACK);
         return;
     } else {
-        destroyBoard(b);
-        destroyComputer(compOpp);
+        endGame();
         exit(0);
     }
 }
@@ -202,12 +229,14 @@ void processKeyboard(int button, int state, int x, int y){
     goodMove = 0;
     if(button == GLUT_LEFT_BUTTON && state == GLUT_DOWN){
         if(contains(&newButton, x, y)){
+                printf("ended");
             endGame();
             startnewgame(BLACK);
         } else if(contains(&quiButton, x, y)){
-            destroyBoard(b);
-            destroyComputer(compOpp);
+            endGame();
             exit(0);
+        } else if(contains(&toggle, x, y)){
+            displayMoves = (displayMoves+1) % 2;
         } else if(contains(&boardBounds, x, y)){
             if(activePlayer == playerColor){
                 boardx = x - boardBounds.x;
@@ -234,8 +263,14 @@ void processKeyboard(int button, int state, int x, int y){
                         switchPlayer();
 
                         if(fillOpenMoves(b, activePlayer)){
-                            endPopup();
+                            deadMoves++;
+                            if(deadMoves == 2){
+                               endPopup();
+                            }
 
+
+                        } else {
+                            deadMoves = 0;
                         }
                         renderScene();
                         updateTree(compOpp, b, activePlayer);
@@ -248,7 +283,14 @@ void processKeyboard(int button, int state, int x, int y){
                         //fillOpenMoves(b, activePlayer);
                         //commene
                         if(fillOpenMoves(b, activePlayer)){
-                            endPopup();
+                            deadMoves++;
+                            if(deadMoves == 2){
+                               endPopup();
+                            }
+
+
+                        } else {
+                            deadMoves = 0;
                         }
                         renderScene();
                         printf("moves filled\n");
@@ -270,11 +312,29 @@ void resize(int width, int height) {
     glutReshapeWindow( 1000, 600);
 };
 
+GLuint loadTexture(char* bname){
+    int id;
+   id = SOIL_load_OGL_texture
+	(
+		bname,
+		SOIL_LOAD_AUTO,
+		SOIL_CREATE_NEW_ID,
+		SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | SOIL_FLAG_NTSC_SAFE_RGB | SOIL_FLAG_COMPRESS_TO_DXT
+	);
+    printf( "SOIL: '%s' , texid is %i\n", SOIL_last_result() , id);
+    glBindTexture(GL_TEXTURE_2D, id);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    return id;
+}
+
 int main(int argc, char **argv)
 {
-
-    glEnable(GL_BLEND);
-    glEnable(GL_TEXTURE_2D);
+    deadMoves = 0;
+    displayMoves = 0;
     boardBounds.x = 300;
     boardBounds.y = 00;
     boardBounds.width = 700;
@@ -283,14 +343,18 @@ int main(int argc, char **argv)
     screenBounds.y = 100;
     screenBounds.width = 1000;
     screenBounds.height = 600;
-    quiButton.x = 0;
-    quiButton.width = boardBounds.x;
+    quiButton.x = 10;
+    quiButton.width = boardBounds.x - 30;
     quiButton.height = 80;
     quiButton.y = screenBounds.height - quiButton.height - 20;
-    newButton.x = 0;
-    newButton.width = boardBounds.x;
+    newButton.x = 10;
+    newButton.width = boardBounds.x - 30;
     newButton.height = 80;
     newButton.y = screenBounds.height - quiButton.height - 20 - newButton.height - 20;;
+    toggle.x = 10;
+    toggle.width = boardBounds.x - 30;
+    toggle.height = 80;
+    toggle.y = 20;
 	// init GLUT and create Window
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
@@ -298,35 +362,16 @@ int main(int argc, char **argv)
 	glutInitWindowSize(screenBounds.width, screenBounds.height);
 	glutCreateWindow("Lighthouse3D - GLUT Tutorial");
     glutReshapeFunc(resize);
-
-    newGame = SOIL_load_OGL_texture
-	(
-		"newgame.png",
-		SOIL_LOAD_AUTO,
-		SOIL_CREATE_NEW_ID,
-		SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | SOIL_FLAG_NTSC_SAFE_RGB | SOIL_FLAG_COMPRESS_TO_DXT
-	);
-    if( 0 == newGame )
-    {
-        printf( "SOIL loading error: '%s'\n", SOIL_last_result() );
-    }
-    glBindTexture(GL_TEXTURE_2D, newGame);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    quit = SOIL_load_OGL_texture
-	(
-		"quit.png",
-		SOIL_LOAD_AUTO,
-		SOIL_CREATE_NEW_ID,
-		SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | SOIL_FLAG_NTSC_SAFE_RGB | SOIL_FLAG_COMPRESS_TO_DXT
-	);
-    glBindTexture(GL_TEXTURE_2D, quit);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glEnable(GL_TEXTURE_2D);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    newGame = loadTexture("new.png");
+    quit = loadTexture("quit.png");
+    boardtex = loadTexture("board2.png");
+    whitetex = loadTexture("white.png");
+    blacktex = loadTexture("black.png");
+    boardtex2 = loadTexture("Boardback.png");
+    toggletex = loadTexture("toggle.png");
 	// register callbacks
 	glutDisplayFunc(renderScene);
 

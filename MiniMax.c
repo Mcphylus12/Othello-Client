@@ -9,8 +9,9 @@ void destroyMiniMax(MinimaxNode* mn){
         for(count = 0; count < mn->noChildren; count++){
             destroyMiniMax(mn->children + count);
         }
+        free(mn->children);
     }
-    free(mn->children);
+
 }
 
 
