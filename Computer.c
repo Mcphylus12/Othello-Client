@@ -157,7 +157,7 @@ float processNode(int levelsLeft, MinimaxNode* node, Computer* callback, float a
             return getHeuristic(callback, node->board);
         }
         if(node->childrenProcessed == 0){
-            node->children = 1;
+            node->noChildren = 1;
             node->children = malloc(sizeof(MinimaxNode));
             node->children[0].board = createBoardFromBoard(node->board);
             node->children[0].player = otherTurn;
