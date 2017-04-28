@@ -25,10 +25,10 @@ Board* createBoard(){
     result->openMoves = createMoveList();
     result->white = 0;
     result->black = 0;
-    setTile(result, BLACK, 3, 3);
-    setTile(result, BLACK, 4, 4);
-    setTile(result, WHITE, 4, 3);
-    setTile(result, WHITE, 3, 4);
+    setTile(result, BLACK, 4, 3);
+    setTile(result, BLACK, 3, 4);
+    setTile(result, WHITE, 4, 4);
+    setTile(result, WHITE, 3, 3);
     return result;
 }
 
@@ -193,6 +193,55 @@ short fillOpenMoves(Board* b, short pactivePlayer){
         }
     }
     return isMoveListEmpty(b->openMoves);
+}
+
+short isMovePossible(Board* b, short pactivePlayer){
+    short goodMove, k, i, j, counter, otherTurn, xdir, ydir;
+    Turn* t;
+    uint64_t board, tempBoard;
+    if(pactivePlayer == BLACK){
+        otherTurn = WHITE;
+    } else {
+        otherTurn = BLACK;
+    }
+
+    for(i = 0; i < 8; i++)
+    {
+        for(j = 0; j < 8; j++)
+        {
+           if(getTile(b, i, j) != EMPTY) continue;
+           board = 0;
+           for(k = 0 ; k < 9; k++){
+                tempBoard = 0;
+                ydir = (k%3) -1;
+                xdir = (k/3) -1;
+                if(!(xdir || ydir)) continue;
+                counter = 1;
+                if(getTile(b, i + counter*xdir, j + counter*ydir) == otherTurn){
+                    setTilel(&tempBoard, i, j);
+                    setTilel(&tempBoard, i + counter*xdir, j + counter*ydir);
+                        while(1){
+                        counter++;
+                        if(getTile(b, i + counter*xdir, j + counter*ydir) == otherTurn){
+                            setTilel(&tempBoard, i + counter*xdir, j + counter*ydir);
+                        } else if(getTile(b, i + counter*xdir, j + counter*ydir) == EMPTY){
+                            break;
+                        } else if(getTile(b, i + counter*xdir, j + counter*ydir) == pactivePlayer){
+                            board = board | tempBoard;
+                            break;
+                        }
+                    }
+                }
+
+
+           }
+           if(board){
+                return 1;
+           }
+
+        }
+    }
+    return 0;
 }
 
 void flipCaptured(Board* b, Turn* newPiece, short pactivePlayer){

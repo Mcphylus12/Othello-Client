@@ -22,6 +22,7 @@ Board* createBoardFromData(uint64_t white, uint64_t black, MoveList* ml);
 Board* createBoardFromBoard(Board* board);
 
 //oo functions
+short isMovePossible(Board* b, short pactivePlayer);
 unsigned short getTile(Board* b, short i, short j);
 void setTile(Board* b, short color, short i, short j);
 unsigned short getTilel(uint64_t board, short i, short j);

@@ -41,7 +41,6 @@ GLuint toggletex;
 Rect toggle;
 short displayMoves;
 
-short deadMoves;
 Computer* compOpp;
 short playerColor;
 short compPlayer;
@@ -75,7 +74,6 @@ void switchPlayer(){
 void startnewgame(short tempplayerColor){
     short result;
     Turn* t;
-    deadMoves = 0;
     b = createBoard();
     result = MessageBox(NULL, "Would you like to go first", "Would you like to go first", MB_YESNO);
     if(result == IDYES){
@@ -261,8 +259,23 @@ void processKeyboard(int button, int state, int x, int y){
                         flipCaptured(b, itrTurn, activePlayer);
                         printf("pieces captured\n");
                         switchPlayer();
+                        renderScene();
+                        updateTree(compOpp, b, activePlayer);
+                        printf("computer data updated\n");
+                        if(!isMovePossible(b, activePlayer)){
+                            switchPlayer();
+                            if(isMovePossible(b, activePlayer)){
+                                fillOpenMoves(b, activePlayer);
+                                return;
+                            } else {
+                                endPopup();
+                            }
+                        } else {
+                            fillOpenMoves(b, activePlayer);
 
-                        if(fillOpenMoves(b, activePlayer)){
+                        }
+                        renderScene();
+                        /*if(fillOpenMoves(b, activePlayer)){
                             deadMoves++;
                             if(deadMoves == 2){
                                endPopup();
@@ -272,9 +285,8 @@ void processKeyboard(int button, int state, int x, int y){
                         } else {
                             deadMoves = 0;
                         }
-                        renderScene();
-                        updateTree(compOpp, b, activePlayer);
-                        printf("computer data updated\n");
+                        */
+
                         compTurn = makeMove(compOpp);
                         printf("computer calculated move at %i, %i\n", compTurn->x, compTurn->y);
                         flipCaptured(b, compTurn, activePlayer);
@@ -282,7 +294,34 @@ void processKeyboard(int button, int state, int x, int y){
                         printf("computer pieces captured\n");
                         //fillOpenMoves(b, activePlayer);
                         //commene
-                        if(fillOpenMoves(b, activePlayer)){
+                        renderScene();
+                        printf("moves filled\n");
+                        updateTree(compOpp, b, activePlayer);
+                        printf("computer data updated again\n");
+                        while(!isMovePossible(b, activePlayer)){
+                            switchPlayer();
+                            if(!isMovePossible(b, activePlayer)){
+                                endPopup();
+                            } else {
+                                switchPlayer();
+                                fillOpenMoves(b, activePlayer);
+                                compTurn = makeMove(compOpp);
+                                printf("computer calculated move at %i, %i\n", compTurn->x, compTurn->y);
+                                flipCaptured(b, compTurn, activePlayer);
+                                switchPlayer();
+                                printf("computer pieces captured\n");
+                                //fillOpenMoves(b, activePlayer);
+                                //commene
+                                renderScene();
+                                printf("moves filled\n");
+                                updateTree(compOpp, b, activePlayer);
+                                printf("computer data updated again\n");
+                            }
+
+                        }
+                        fillOpenMoves(b, activePlayer);
+                        renderScene();
+                        /*if(fillOpenMoves(b, activePlayer)){
                             deadMoves++;
                             if(deadMoves == 2){
                                endPopup();
@@ -291,11 +330,8 @@ void processKeyboard(int button, int state, int x, int y){
 
                         } else {
                             deadMoves = 0;
-                        }
-                        renderScene();
-                        printf("moves filled\n");
-                        updateTree(compOpp, b, activePlayer);
-                        printf("computer data updated again\n");
+                        }*/
+
                         destroyTurn(compTurn);
                         printf("turn destroyed\n");
                     }
@@ -333,7 +369,6 @@ GLuint loadTexture(char* bname){
 
 int main(int argc, char **argv)
 {
-    deadMoves = 0;
     displayMoves = 0;
     boardBounds.x = 300;
     boardBounds.y = 00;
