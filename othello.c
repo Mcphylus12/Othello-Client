@@ -1,9 +1,10 @@
 int TREEDEPTH;
-
+#define TRAINING 0
 
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include <math.h>
 #include "GL/glut.h"
 #include "SOIL/SOIL.h"
@@ -47,6 +48,7 @@ short compPlayer;
 short activePlayer;
 Board* b;
 
+
 short otherPlayer(short player){
     if(player == WHITE) return BLACK;
     return WHITE;
@@ -70,6 +72,124 @@ void switchPlayer(){
         activePlayer = BLACK;
     }
 }
+void renderScene();
+Computer* train1;
+Computer* train2;
+void runTrainingGame(Computer* train1, Computer* train2 , int* ended){
+    Turn* t;
+            t = makeMove(train2);
+            //SleepEx(1000, FALSE);
+            flipCaptured(b, t, activePlayer);
+            free(t);
+            renderScene();
+            switchPlayer();
+            updateTree(train1, b, activePlayer);
+            updateTree(train2, b, activePlayer);
+            while(countMovePossible(b, activePlayer) == 0){
+                updateTree(train1, b, activePlayer);
+                updateTree(train2, b, activePlayer);
+                switchPlayer();
+                if(countMovePossible(b, activePlayer) == 0){
+                    *ended = 1;
+                    return;
+                } else {
+                    fillOpenMoves(b, activePlayer);
+                    t = makeMove(train2);
+                    SleepEx(1000, FALSE);
+                    flipCaptured(b, t, activePlayer);
+                    free(t);
+                    renderScene();
+                    switchPlayer();
+                    updateTree(train1, b, activePlayer);
+                    updateTree(train2, b, activePlayer);
+                }
+            }
+            fillOpenMoves(b, activePlayer);
+
+            t = makeMove(train1);
+            //SleepEx(1000, FALSE);
+            flipCaptured(b, t, activePlayer);
+            free(t);
+            renderScene();
+            switchPlayer();
+            updateTree(train1, b, activePlayer);
+            updateTree(train2, b, activePlayer);
+            while(countMovePossible(b, activePlayer) == 0){
+                updateTree(train1, b, activePlayer);
+                updateTree(train2, b, activePlayer);
+                switchPlayer();
+                if(countMovePossible(b, activePlayer) == 0){
+                    *ended = 1;
+                    return;
+                } else {
+                    fillOpenMoves(b, activePlayer);
+                    t = makeMove(train1);
+                    SleepEx(1000, FALSE);
+                    flipCaptured(b, t, activePlayer);
+                    free(t);
+                     renderScene();
+                    switchPlayer();
+                    updateTree(train1, b, activePlayer);
+                    updateTree(train2, b, activePlayer);
+                }
+            }
+            fillOpenMoves(b, activePlayer);
+
+}
+void startTraining(){
+    srand(time(NULL));
+    int counter, ended, wins, winpos, wincount, longstab, shortstab, white, black;
+    FILE* heuristic_log;
+    struct tm *tm;
+    char str_time[100];
+    time_t t;
+    t = time(NULL);
+    tm = localtime(&t);
+    strftime(str_time, sizeof(str_time), "%H %M %S %d %m %y", tm);
+    heuristic_log = fopen(str_time, "w");
+    wins = 0;
+    winpos = 22;
+    wincount = 53;
+    longstab = 35;
+    shortstab = 79;
+    counter = 0;
+    while(wins < 50 && counter < 100){
+        activePlayer = BLACK;
+        b = createBoard();
+        ended = 0;
+        fillOpenMoves(b, activePlayer);
+        //train1 = createComputer(b, WHITE, BLACK, 0, 100, 0, 0);
+        //train2 = createComputer(b, BLACK, BLACK, 0, 0, 100, 0);
+        train1 = createComputer(b, WHITE, BLACK, rand() % 101, rand() % 101, rand() % 101, rand() % 101);
+        train2 = createComputer(b, BLACK, BLACK, winpos, wincount, shortstab, longstab);
+        //createComputer(Board* b, short compplayer, short activeboardplayer, int positional, int countt, int longstable, int shortstable)
+        while(!ended){
+           runTrainingGame(train1, train2, &ended);
+        }
+        white = countPieces(b, WHITE);
+        black = countPieces(b, BLACK);
+        if(white > black){
+             if(wins > 5){
+               fprintf(heuristic_log, "good heuristic logged with pos: %i, count: %i, long: %i, short: %i and %i wins\n",winpos,wincount,longstab,shortstab, wins);
+           }
+            winpos = train1->positional;
+            wincount = train1->countt;
+            longstab = train1->longstable;
+           shortstab = train1->shortstable;
+            printf("new winner with pos: %i, count: %i, long: %i, short: %i\n",winpos,wincount,longstab,shortstab);
+            wins = 1;
+
+        } else {
+                  wins++;
+            printf("same winner with pos: %i, count: %i, long: %i, short: %i and %i wins\n",winpos,wincount,longstab,shortstab,wins);
+        }
+        destroyBoard(b);
+        destroyComputer(train1);
+        destroyComputer(train2);
+        counter++;
+    }
+    fclose(heuristic_log);
+}
 
 void startnewgame(short tempplayerColor){
     short result;
@@ -87,7 +207,8 @@ void startnewgame(short tempplayerColor){
 
 
     fillOpenMoves(b, activePlayer);
-    compOpp = createComputer(b, compPlayer, activePlayer);
+
+    compOpp = createComputer(b, compPlayer, activePlayer, 22, 53, 35, 79);
     if(activePlayer == compPlayer){
         t = makeMove(compOpp);
         flipCaptured(b, t, activePlayer);
@@ -104,6 +225,7 @@ void endGame(){
 void renderScene(void) {
     int i, j, count;
     MoveNode* itr;
+    if(b == NULL) return;
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -217,7 +339,7 @@ void endPopup(){
 }
 
 void processKeyboard(int button, int state, int x, int y){
-    printf("Clicked\n");
+//    printf("Clicked\n");
     int boardx, boardy;
     short cellX, cellY, goodMove;
     MoveNode* itr;
@@ -227,7 +349,7 @@ void processKeyboard(int button, int state, int x, int y){
     goodMove = 0;
     if(button == GLUT_LEFT_BUTTON && state == GLUT_DOWN){
         if(contains(&newButton, x, y)){
-                printf("ended");
+//                printf("ended");
             endGame();
             startnewgame(BLACK);
         } else if(contains(&quiButton, x, y)){
@@ -241,9 +363,9 @@ void processKeyboard(int button, int state, int x, int y){
                 boardy = y - boardBounds.y;
                 cellX = (int) boardx / (boardBounds.width /8);
                 cellY = (int) boardy / (boardBounds.height /8);
-                printf("click was made on cell %i %i\n", cellX, cellY);
+//                printf("click was made on cell %i %i\n", cellX, cellY);
                 if(isMoveListEmpty(b->openMoves)){
-                    printf("Move List was empty\n");
+//                    printf("Move List was empty\n");
                 } else {
                     itr = b->openMoves->head;
                     while(itr != NULL_PTR){
@@ -262,10 +384,13 @@ void processKeyboard(int button, int state, int x, int y){
                         renderScene();
                         updateTree(compOpp, b, activePlayer);
                         printf("computer data updated\n");
-                        if(!isMovePossible(b, activePlayer)){
+                        if(!countMovePossible(b, activePlayer)){
+                            updateTree(compOpp, b, activePlayer);
                             switchPlayer();
-                            if(isMovePossible(b, activePlayer)){
+                            if(countMovePossible(b, activePlayer)){
+
                                 fillOpenMoves(b, activePlayer);
+
                                 return;
                             } else {
                                 endPopup();
@@ -286,9 +411,10 @@ void processKeyboard(int button, int state, int x, int y){
                             deadMoves = 0;
                         }
                         */
-
+                        SleepEx(500, TRUE);
                         compTurn = makeMove(compOpp);
                         printf("computer calculated move at %i, %i\n", compTurn->x, compTurn->y);
+
                         flipCaptured(b, compTurn, activePlayer);
                         switchPlayer();
                         printf("computer pieces captured\n");
@@ -298,12 +424,13 @@ void processKeyboard(int button, int state, int x, int y){
                         printf("moves filled\n");
                         updateTree(compOpp, b, activePlayer);
                         printf("computer data updated again\n");
-                        while(!isMovePossible(b, activePlayer)){
+                        while(!countMovePossible(b, activePlayer)){
+                            MessageBox(NULL, "You Cant GO", "You Cant GO", MB_OK);
+                            updateTree(compOpp, b, activePlayer);
                             switchPlayer();
-                            if(!isMovePossible(b, activePlayer)){
+                            if(!countMovePossible(b, activePlayer)){
                                 endPopup();
                             } else {
-                                switchPlayer();
                                 fillOpenMoves(b, activePlayer);
                                 compTurn = makeMove(compOpp);
                                 printf("computer calculated move at %i, %i\n", compTurn->x, compTurn->y);
@@ -369,6 +496,7 @@ GLuint loadTexture(char* bname){
 
 int main(int argc, char **argv)
 {
+    b = NULL;
     displayMoves = 0;
     boardBounds.x = 300;
     boardBounds.y = 00;
@@ -395,7 +523,7 @@ int main(int argc, char **argv)
 	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
 	glutInitWindowPosition(screenBounds.x, screenBounds.y);
 	glutInitWindowSize(screenBounds.width, screenBounds.height);
-	glutCreateWindow("Lighthouse3D - GLUT Tutorial");
+	glutCreateWindow("Reversi");
     glutReshapeFunc(resize);
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_BLEND);
@@ -416,7 +544,13 @@ int main(int argc, char **argv)
 	glClearColor(0.133, 0.545, 0.133, 1.0);
     glLineWidth(2.0f);
 
-    startnewgame(WHITE);
+
+#if TRAINING == 1
+startTraining();
+#else
+startnewgame(WHITE);
+#endif
+
 
 
 

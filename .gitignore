@@ -2,13 +2,8 @@
 ## openFrameworks  
 #################  
 
-[Bb]in/*  
-![Bb]in/data/  
-[Bb]uild/  
 [Oo]bj/  
 *.o  
-[Dd]ebug*/  
-[Rr]elease*/  
 *.mode*  
 *.app/  
 *.pyc  

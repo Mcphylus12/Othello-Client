@@ -25,10 +25,9 @@ Board* createBoard(){
     result->openMoves = createMoveList();
     result->white = 0;
     result->black = 0;
-    setTile(result, BLACK, 4, 3);
-    setTile(result, BLACK, 3, 4);
-    setTile(result, WHITE, 4, 4);
-    setTile(result, WHITE, 3, 3);
+    //setTile(result, BLACK, 4, 4);setTile(result, BLACK, 3, 3);setTile(result, WHITE, 4, 3);setTile(result, WHITE, 3, 4);
+    setTile(result, BLACK, 4, 3);setTile(result, BLACK, 3, 4);setTile(result, WHITE, 4, 4);setTile(result, WHITE, 3, 3);
+
     return result;
 }
 
@@ -195,10 +194,11 @@ short fillOpenMoves(Board* b, short pactivePlayer){
     return isMoveListEmpty(b->openMoves);
 }
 
-short isMovePossible(Board* b, short pactivePlayer){
-    short goodMove, k, i, j, counter, otherTurn, xdir, ydir;
+short countMovePossible(Board* b, short pactivePlayer){
+    short goodMove, k, i, j, counter, otherTurn, xdir, ydir, result;
     Turn* t;
     uint64_t board, tempBoard;
+    result = 0;
     if(pactivePlayer == BLACK){
         otherTurn = WHITE;
     } else {
@@ -236,12 +236,12 @@ short isMovePossible(Board* b, short pactivePlayer){
 
            }
            if(board){
-                return 1;
+                result++;
            }
 
         }
     }
-    return 0;
+    return result;
 }
 
 void flipCaptured(Board* b, Turn* newPiece, short pactivePlayer){

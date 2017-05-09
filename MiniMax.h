@@ -12,6 +12,7 @@ typedef struct tagMinimaxNode{
     short player;
 } MinimaxNode;
 
+void printTree(MinimaxNode* mn);
 void destroyMiniMax(MinimaxNode* mn);
 void destroyMiniMaxNoFree(MinimaxNode* mn);
 void shallowDestroy(MinimaxNode* mn);
