@@ -20,136 +20,56 @@ Computer* createComputer(Board* b, short compplayer, short activeboardplayer, in
     Computer* result;
     result = (Computer*)malloc(sizeof(Computer));
     result->player = compplayer;
-    result->root = malloc(sizeof(MinimaxNode));
-    result->root->board = createBoardFromBoard(b);
-    result->root->childrenProcessed = 0;
-    result->root->heuristic = getHeuristic(result, result->root->board);
-    result->root->player = activeboardplayer;
     result->positional = positional;
     result->countt = countt;
     result->longstable = longstable;
     result->shortstable = shortstable;
-    processNode(TREEDEPTH, result->root, result, -10000000, 10000000, 0);
     return result;
 }
 
 void updateTree(Computer* computer, Board* newb, short player){
-    int count;
-    MinimaxNode* oldroot;
-    MinimaxNode* newroot;
-    oldroot = computer->root;
-    fillNode(oldroot, computer);
-    for(count = 0; count < computer->root->noChildren; count++){
-        if(compareBoards(computer->root->children[count].board, newb) == 0){
-            newroot = (MinimaxNode*)malloc(sizeof(MinimaxNode));
-            newroot->board = computer->root->children[count].board;
-            newroot->heuristic = computer->root->children[count].heuristic;
-            newroot->children = computer->root->children[count].children;
-            newroot->childrenProcessed = computer->root->children[count].childrenProcessed;
-            newroot->player = computer->root->children[count].player;
-            newroot->noChildren = computer->root->children[count].noChildren;
-        } else {
-            destroyMiniMax(computer->root->children + count);
-        }
-    }
-    free(oldroot->children);
-    free(oldroot->board);
-    free(oldroot);
-    computer->root = newroot;
+
 }
 
 void fillNode(MinimaxNode* mn, Computer* callback){
-    int count;
-    MoveNode* itr;
-    Turn* t;
-    short otherTurn;
-    if(mn->player == BLACK){
-        otherTurn = WHITE;
-    } else {
-        otherTurn = BLACK;
-    }
-    itr = mn->board->openMoves->head;
-    if(mn->childrenProcessed != 0){
-        return;
-    } else {
-        mn->noChildren = getMoveListSize(mn->board->openMoves);
-        if(mn->noChildren == 0){
-            mn->noChildren = 1;
-            mn->children = malloc(sizeof(MinimaxNode));
-            mn->children[0].board = createBoardFromBoard(mn->board);
-            mn->children[0].player = otherTurn;
-            mn->children[0].childrenProcessed = 0;
-            fillOpenMoves(mn->children[0].board, otherTurn);
-            mn->children[0].heuristic = getHeuristic(callback, mn->children[0].board);
-            mn->childrenProcessed = 1;
-        } else {
-            mn->children = malloc(mn->noChildren * sizeof(MinimaxNode));
-            count = 0;
-            while(itr != NULL_PTR){
-                mn->children[count].board = createBoardFromBoard(mn->board);
-                t = itr->turn;
-                mn->children[count].player = otherTurn;
-                mn->children[count].childrenProcessed = 0;
-                flipCaptured(mn->children[count].board, t, mn->player);
-                fillOpenMoves(mn->children[count].board, otherTurn);
-                mn->children[count].heuristic = getHeuristic(callback, mn->children[count].board);
-                count++;
-                itr = itr->next;
-            }
-            mn->childrenProcessed = 1;
-        }
 
-
-
-    }
     //printf("node filled \n");
 }
 
-int mincmpfunc (const void * a, const void * b)
-{
-    MinimaxNode* ma = (MinimaxNode*)a;
-    MinimaxNode* mb = (MinimaxNode*)b;
-   return ( ma->heuristic - mb->heuristic );
+
+short otherPlayer(short player){
+    if(player == WHITE) return BLACK;
+    return WHITE;
 }
 
-int maxcmpfunc (const void * a, const void * b)
-{
-   MinimaxNode* ma = (MinimaxNode*)a;
-    MinimaxNode* mb = (MinimaxNode*)b;
-   return ( mb->heuristic - ma->heuristic );
-}
-
-
-Turn* makeMove(Computer* c){
+Turn* makeMove(Computer* c, Board* bt){
     float alpha, beta;
     Turn* max;
-    int count;
+    Turn* itr;
+    MoveNode* mn;
     float maxh, heuristic;
+    Board* tmp;
     maxh = -10000000;
     alpha = -10000000;
     beta = 10000000;
-    max = c->root->board->openMoves->head->turn;
-    if(c->root->childrenProcessed == 0){
-        fillNode(c->root, c);
-    } else {
-//        printf("node already created at depth ROOT\n");
-    }
-    qsort(c->root->children, c->root->noChildren, sizeof(MinimaxNode), maxcmpfunc);
+    mn = bt->openMoves->head;
+    max = mn->turn;
 
-    for(count = 0; count < c->root->noChildren; count++){
-
-
-
+    while(mn != NULL){
+        itr = mn->turn;
+        tmp = createBoardFromBoard(bt);
+        flipCaptured(tmp, itr, c->player);
+        fillOpenMoves(tmp, otherPlayer(c->player));
         //System.out.println("ROOT:Processing child from root made with Turn:" + t.toString());
-        heuristic = processNode(TREEDEPTH, &c->root->children[count], c, alpha, beta, 0);
+        heuristic = processNode(TREEDEPTH, tmp, c, alpha, beta, 0, 0);
         if(heuristic > maxh){
             maxh = heuristic;
-            max = getTurn(c->root->board->openMoves, count);
+            max = itr;
             alpha = heuristic;
 
         }
-
-
+    destroyBoard(tmp);
+    mn = mn->next;
     }
 #if DEBUG == 1
     printf("%f was best as we want to maximise at level %i\n", maxh, TREEDEPTH +1);
@@ -161,45 +81,54 @@ Turn* makeMove(Computer* c){
 float max(float a, float b){if(a > b) return a; else return b;}
 float min(float a, float b){if(a < b) return a; else return b;}
 
-float processNode(int levelsLeft, MinimaxNode* node, Computer* callback, float alpha, float beta, short deadMoves){
+float processNode(int levelsLeft, Board* bt, Computer* callback, float alpha, float beta, short player, short deadmoves){
 
-
-    int count, count2;
+    Board* tmp;
+    MoveNode* mn;
+    Turn* t;
     float best, heuristic;
-    short otherTurn;
-    if(node->player == BLACK){
-        otherTurn = WHITE;
-    } else {
-        otherTurn = BLACK;
-    }
-
-
+    mn = bt->openMoves->head;
     if(levelsLeft == 0){
-        best = getHeuristic(callback, node->board);
+            return getHeuristic(callback, bt);
 #if DEBUG == 1
            for(count2 = 0; count2 < TREEDEPTH - levelsLeft; count2++){
                 printf("\t");
             }
             printf("%f was heuristic at level %i\n", best, TREEDEPTH);
 #endif // DEBUG
-        return best;
 
     } else {
-       if(node->player == callback->player){
+       if(player == callback->player){
             best = -1000000;
-            if(node->childrenProcessed == 0){
-                fillNode(node, callback);
 
-//                 printf("node filed at depth %i\n", levelsLeft);
-            } else {
-//                printf("node already created at depth %i\n", levelsLeft);
-            }
-                qsort(node->children, node->noChildren, sizeof(MinimaxNode), maxcmpfunc);
+               if(mn == NULL){
+                    if(deadmoves == 1){
+                        return getHeuristic(callback, bt);
+                    } else {
+                        deadmoves++;
+                    }
+                    tmp = createBoardFromBoard(bt);
+                    fillOpenMoves(tmp, otherPlayer(player));
+                    heuristic = processNode(levelsLeft, tmp, callback, alpha, beta, otherPlayer(player), deadmoves);
+                    destroyBoard(tmp);
+                    //printf("%f, ", heuristic);
+                    best = max(best, heuristic);
+                    alpha = max(alpha, best);
+                } else {
+                    deadmoves = 0;
+                }
+
                 //printf("processing: ");
-                for(count = 0; count < node->noChildren; count++){
+                while(mn != NULL){
+                        t = mn->turn;
+                        tmp = createBoardFromBoard(bt);
+                        flipCaptured(tmp, t, player);
+                fillOpenMoves(tmp, otherPlayer(player));
                // printf("alpha: %f, beta: %f", alpha, beta);
          //System.out.println("ROOT:Processing child from root made with Turn:" + t.toString());
-                heuristic = processNode(levelsLeft-1, &node->children[count], callback, alpha, beta, deadMoves);
+
+                heuristic = processNode(levelsLeft-1, tmp, callback, alpha, beta, otherPlayer(player), deadmoves);
+                destroyBoard(tmp);
                 //printf("%f, ", heuristic);
                 best = max(best, heuristic);
                 alpha = max(alpha, best);
@@ -207,11 +136,11 @@ float processNode(int levelsLeft, MinimaxNode* node, Computer* callback, float a
 
 //                printf("\tpruning");
                 break;
-                };
+                }
 
-
+                mn = mn->next;
             }
-#if DEBUg == 1
+#if DEBUG == 1
             for(count2 = 0; count2 < TREEDEPTH - levelsLeft + 1; count2++){
                 printf("\t");
             }
@@ -219,25 +148,41 @@ float processNode(int levelsLeft, MinimaxNode* node, Computer* callback, float a
 #endif // DEBUg
        } else {
             best = 1000000;
-            if(node->childrenProcessed == 0){
-                fillNode(node, callback);
-//                 printf("node filed at depth %i\n", levelsLeft);
-            } else {
-//                printf("node already created at depth %i\n", levelsLeft);
-            }
-            qsort(node->children, node->noChildren, sizeof(MinimaxNode), mincmpfunc);
-                for(count = 0; count < node->noChildren; count++){
-               // printf("alpha: %f, beta: %f", alpha, beta);
 
-                //System.out.println("ROOT:Processing child from root made with Turn:" + t.toString());
-                heuristic = processNode(levelsLeft-1, &node->children[count], callback, alpha, beta, deadMoves);
+               if(mn == NULL){
+                    if(deadmoves == 1){
+                        return getHeuristic(callback, bt);
+                    } else {
+                        deadmoves++;
+                    }
+                    tmp = createBoardFromBoard(bt);
+                    fillOpenMoves(tmp, otherPlayer(player));
+
+                    heuristic = processNode(levelsLeft, tmp, callback, alpha, beta, otherPlayer(player), deadmoves);
+                    destroyBoard(tmp);
+                    //printf("%f, ", heuristic);
+                    best = min(best, heuristic);
+                    beta = min(beta, best);
+
+                } else {
+                    deadmoves = 0;
+                }
+
+                while(mn != NULL){
+                        t = mn->turn;
+                        tmp = createBoardFromBoard(bt);
+                        flipCaptured(tmp, t, player);
+                fillOpenMoves(tmp, otherPlayer(player));
+                heuristic = processNode(levelsLeft-1, tmp, callback, alpha, beta, otherPlayer(player), deadmoves);
+                destroyBoard(tmp);
                 best = min(best, heuristic);
                 beta = min(beta, best);
                 if(beta <= alpha) {
 //                        printf("\tpruning");
                    break;
 
-                };
+                }
+                mn = mn->next;
 
             }
 #if DEBUG == 1
@@ -483,12 +428,10 @@ float getHeuristic(Computer* c, Board* b){
     }
     destroyBoard(tmp);
     //printf("%i, %i, %i, %i, %i\n", c->positional*positional_goodness, c->countt*count_goodness, c->longstable*(friendly_stable - enemy_stable), c->shortstable*immstable,c->positional*positional_goodness + c->countt*count_goodness + c->longstable*(friendly_stable - enemy_stable) + c->shortstable*immstable);
-    return c->positional*positional_goodness + c->countt*count_goodness + c->longstable*(friendly_stable - enemy_stable) + c->shortstable*immstable;
+    return (c->positional*positional_goodness + c->countt*count_goodness + c->longstable*(friendly_stable - enemy_stable) + c->shortstable*immstable);
 
 }
 
 void destroyComputer(Computer* c){
-    destroyMiniMax(c->root);
-    free(c->root);
     free(c);
 }

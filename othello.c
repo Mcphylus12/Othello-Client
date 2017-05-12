@@ -49,10 +49,7 @@ short activePlayer;
 Board* b;
 
 
-short otherPlayer(short player){
-    if(player == WHITE) return BLACK;
-    return WHITE;
-}
+extern short otherPlayer(short player);
 
 short contains(Rect* rect, int x, int y){
     if(x < rect->x ||
@@ -77,60 +74,53 @@ Computer* train1;
 Computer* train2;
 void runTrainingGame(Computer* train1, Computer* train2 , int* ended){
     Turn* t;
-            t = makeMove(train2);
+            t = makeMove(train2, b);
             //SleepEx(1000, FALSE);
             flipCaptured(b, t, activePlayer);
             free(t);
             renderScene();
             switchPlayer();
-            updateTree(train1, b, activePlayer);
-            updateTree(train2, b, activePlayer);
+
             while(countMovePossible(b, activePlayer) == 0){
-                updateTree(train1, b, activePlayer);
-                updateTree(train2, b, activePlayer);
+
                 switchPlayer();
                 if(countMovePossible(b, activePlayer) == 0){
                     *ended = 1;
                     return;
                 } else {
                     fillOpenMoves(b, activePlayer);
-                    t = makeMove(train2);
+                    t = makeMove(train2, b);
                     SleepEx(1000, FALSE);
                     flipCaptured(b, t, activePlayer);
                     free(t);
                     renderScene();
                     switchPlayer();
-                    updateTree(train1, b, activePlayer);
-                    updateTree(train2, b, activePlayer);
                 }
             }
             fillOpenMoves(b, activePlayer);
 
-            t = makeMove(train1);
+            t = makeMove(train1, b);
             //SleepEx(1000, FALSE);
             flipCaptured(b, t, activePlayer);
             free(t);
             renderScene();
             switchPlayer();
-            updateTree(train1, b, activePlayer);
-            updateTree(train2, b, activePlayer);
+
             while(countMovePossible(b, activePlayer) == 0){
-                updateTree(train1, b, activePlayer);
-                updateTree(train2, b, activePlayer);
+
                 switchPlayer();
                 if(countMovePossible(b, activePlayer) == 0){
                     *ended = 1;
                     return;
                 } else {
                     fillOpenMoves(b, activePlayer);
-                    t = makeMove(train1);
+                    t = makeMove(train1, b);
                     SleepEx(1000, FALSE);
                     flipCaptured(b, t, activePlayer);
                     free(t);
                      renderScene();
                     switchPlayer();
-                    updateTree(train1, b, activePlayer);
-                    updateTree(train2, b, activePlayer);
+
                 }
             }
             fillOpenMoves(b, activePlayer);
@@ -210,11 +200,10 @@ void startnewgame(short tempplayerColor){
 
     compOpp = createComputer(b, compPlayer, activePlayer, 22, 53, 35, 79);
     if(activePlayer == compPlayer){
-        t = makeMove(compOpp);
+        t = makeMove(compOpp, b);
         flipCaptured(b, t, activePlayer);
         switchPlayer();
         fillOpenMoves(b, activePlayer);
-        updateTree(compOpp, b, activePlayer);
     }
 }
 void endGame(){
@@ -382,10 +371,8 @@ void processKeyboard(int button, int state, int x, int y){
                         printf("pieces captured\n");
                         switchPlayer();
                         renderScene();
-                        updateTree(compOpp, b, activePlayer);
                         printf("computer data updated\n");
                         if(!countMovePossible(b, activePlayer)){
-                            updateTree(compOpp, b, activePlayer);
                             switchPlayer();
                             if(countMovePossible(b, activePlayer)){
 
@@ -412,7 +399,7 @@ void processKeyboard(int button, int state, int x, int y){
                         }
                         */
                         SleepEx(500, TRUE);
-                        compTurn = makeMove(compOpp);
+                        compTurn = makeMove(compOpp, b);
                         printf("computer calculated move at %i, %i\n", compTurn->x, compTurn->y);
 
                         flipCaptured(b, compTurn, activePlayer);
@@ -422,17 +409,15 @@ void processKeyboard(int button, int state, int x, int y){
                         //commene
                         renderScene();
                         printf("moves filled\n");
-                        updateTree(compOpp, b, activePlayer);
                         printf("computer data updated again\n");
                         while(!countMovePossible(b, activePlayer)){
                             MessageBox(NULL, "You Cant GO", "You Cant GO", MB_OK);
-                            updateTree(compOpp, b, activePlayer);
                             switchPlayer();
                             if(!countMovePossible(b, activePlayer)){
                                 endPopup();
                             } else {
                                 fillOpenMoves(b, activePlayer);
-                                compTurn = makeMove(compOpp);
+                                compTurn = makeMove(compOpp, b);
                                 printf("computer calculated move at %i, %i\n", compTurn->x, compTurn->y);
                                 flipCaptured(b, compTurn, activePlayer);
                                 switchPlayer();
@@ -441,7 +426,6 @@ void processKeyboard(int button, int state, int x, int y){
                                 //commene
                                 renderScene();
                                 printf("moves filled\n");
-                                updateTree(compOpp, b, activePlayer);
                                 printf("computer data updated again\n");
                             }
 

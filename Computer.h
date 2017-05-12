@@ -14,9 +14,9 @@ typedef struct tagComputer{
 
 Computer* createComputer(Board* b, short compplayer, short activeboardplayer, int positional, int countt, int longstable, int shortstable);
 void updateTree(Computer* computer, Board* newb, short player);
-Turn* makeMove(Computer* c);
+Turn* makeMove(Computer* c, Board* bt);
 void fillNode(MinimaxNode* mn, Computer* callback);
-float processNode(int levelsLeft, MinimaxNode* node, Computer* callback, float alpha, float beta, short deadMoves);
+float processNode(int levelsLeft, Board* bt, Computer* callback, float alpha, float beta, short player, short deadmoves);
 float getHeuristic(Computer* c, Board* b);
 void destroyComputer(Computer* c);
 
