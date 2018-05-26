@@ -2,7 +2,8 @@
 ## openFrameworks  
 #################  
 
-[Oo]bj/  
+[Oo]bj/
+[Bb]in/  
 *.o  
 *.mode*  
 *.app/  
