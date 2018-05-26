@@ -1,0 +1,7 @@
+\contentsline {figure}{\numberline {1}{\ignorespaces Board before (Left) and after (Right) a move by white capturing pieces vertically up and diagonally up and left\relax }}{5}{figure.caption.6}
+\contentsline {figure}{\numberline {2}{\ignorespaces Example of minimax passing values from terminal nodes to the root.\relax }}{8}{figure.caption.7}
+\contentsline {figure}{\numberline {3}{\ignorespaces minimax algorithm\relax }}{9}{figure.caption.8}
+\contentsline {figure}{\numberline {4}{\ignorespaces A diagram demonstrating alpha beta pruning with cutoffs detailed\relax }}{11}{figure.caption.9}
+\contentsline {figure}{\numberline {5}{\ignorespaces Capturing pieces\relax }}{16}{figure.caption.10}
+\contentsline {figure}{\numberline {6}{\ignorespaces Algorithm for finding legal moves\relax }}{17}{figure.caption.11}
+\contentsline {figure}{\numberline {7}{\ignorespaces Pieces vertically down and the downward left diagonal are both captured by the move highlighted in red\relax }}{18}{figure.caption.12}

@@ -1,0 +1,39 @@
+\begin{thebibliography}{}
+
+\bibitem[Clune, 2007]{clune2007heuristic}
+Clune, J. (2007).
+\newblock Heuristic evaluation functions for general game playing.
+\newblock In {\em AAAI}, volume~7, pages 1134--1139.
+
+\bibitem[Lee and Mahajan, 1986]{lee1986bill}
+Lee, K.-F. and Mahajan, S. (1986).
+\newblock Bill: a table-based, knowledge-intensive othello program.
+
+\bibitem[Olivito et~al., 2010]{olivito2010fpga}
+Olivito, J., Gonz{\'a}lez, C., and Resano, J. (2010).
+\newblock Fpga implementation of a strong reversi player.
+\newblock In {\em Field-Programmable Technology (FPT), 2010 International
+  Conference on}, pages 507--510. IEEE.
+
+\bibitem[Picard, 2013]{picard2013foundation}
+Picard, M. (2013).
+\newblock The foundation of geemu: A brief history of early japanese video
+  games.
+\newblock {\em Game Studies}, 13(2).
+
+\bibitem[Rosenbloom, 1982]{rosenbloom1982world}
+Rosenbloom, P.~S. (1982).
+\newblock A world-championship-level othello program.
+\newblock {\em Artificial Intelligence}, 19(3):279--320.
+
+\bibitem[Sannidhanam and Annamalai, 2015]{sannidhanam2015analysis}
+Sannidhanam, V. and Annamalai, M. (2015).
+\newblock An analysis of heuristics in othello.
+
+\bibitem[Wright, 1977]{Othello23:online}
+Wright, E. (1977).
+\newblock Othello.
+\newblock \url{http://www.atariarchives.org/bcc3/showpage.php?page=258}.
+\newblock (Accessed on 10/18/2016).
+
+\end{thebibliography}

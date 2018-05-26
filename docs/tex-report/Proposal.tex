@@ -1,0 +1,164 @@
+\documentclass[proposal]{cmpreport}
+\makeatletter
+\input{t1pcr.fd}
+\makeatother
+\usepackage{rotating}
+\setlength{\footnotesep}{3ex}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  Fill in the fields with:
+%
+%  your project title
+%  your name
+%  your registration number
+%  your supervisor's name
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\title{Reversi Game Implementation}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% The author's name is ignored if the following command 
+% is not present in the document
+%
+% Before submitting a PDF of your final report to the 
+% project database you may comment out the command
+% if you are worried about lack of anonymity.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\author{Kyle Alexander}
+
+
+\registration{100082709}
+\supervisor{Dr Christopher Greenman}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Fill in the field with your module code.
+% this should be:
+%
+% for BIS            -> CMP-6012Y
+% for BUSINESS STATS -> CMP-6028Y
+% for other students -> CMP-6013Y
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\ccode{CMP-6013Y}
+
+\summary{
+	
+}
+
+\acknowledgements{
+	
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% If you do not want a list of figures and a list of tables
+% to appear after the table of content then uncomment this line 
+%
+% Note that the class file contains code to avoid
+% producing an empty list section (e.g list of figures) if the 
+% list is empty (i.e. no figure in document).
+%
+% The command also prevents inserting a list of figures or tables 
+% anywhere else in the document
+%
+% Some supervisors think that a report should not contain these
+% lists. Please ask your supervisor's opinion.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\nolist,
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Comment out if you want your list of figures and list of
+% tables on two or more pages, in particular if the lists do not fit 
+% on a single page.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\onePageLists
+\begin{document}
+\section{Description}
+Reversi is a game played on an 8 x 8 Board by 2 people with 64 pieces that have both light and dark sides. Players alternate turns and in each turn a player places a single piece or "Disc" on to the board capturing all pieces between the placed piece and all pieces of the the players colour that are either horizontal, vertical or diagonal to the placed piece. Players win by having the most pieces flipped to their colour on the board at the point when neither player can legally play a piece. A move is only legal when it captures an opponents piece.
+
+By the end of the project the aim is to have a GUI\footnote{A graphical user interface. In the context of Reversi this will be a representation of a board and display where pieces have been placed.} with which a player can play a game of Reversi against a second player or a computer opponent. If time allows I plan to also implement varying difficulties of computer opponents as well as an option to play against an opponent over the internet using a system where one of the players hosts a game on their application and the other connects to their IP address. This will involve building an application capable of hosting a game of Reversi by listening on a port as well as presenting the game to the user and detecting player input. Of course opening to the game up to the internet entails many risks that will be detailed in Risks \ref{Risks}
+
+The computer opponent will be the most complex part of the program as board game AI can range from very simple heuristic functions detailed here\footnote{Heuristic/Evaluation Function for Reversi/Othello \url{https://kartikkukreja.wordpress.com/2013/03/30/heuristic-function-for-reversiothello/}} all the way to large decision making trees that use alpha beta pruning to try and find the optimal moves to make while taking into account future possible moves\footnote{An Analysis of Heuristics in Othello \url{https://courses.cs.washington.edu/courses/cse573/04au/Project/mini1/RUSSIA/Final_Paper.pdf}}. If time allows then different difficulties could be implemented by performing searches on the game tree to different depths or a very simple AI may not use a game tree at all and simply perform an analysis on the existing board to make a decision.
+
+\section{Risks} \label{Risks}
+There are little risks beyond the expected Project risks such as time mismanagement and inadequate testing. This changes if the online feature is added in which cases security measure must be added to verify connections and make players aware of the risks of exposing their IP address to people they cannot trust. In the proposal I foresee the following risks and possible counter measures for the final project.
+\begin{description}
+	\item[Time Mismanagement] An obvious risk will be if I do not manage my time correctly and cannot meet the deadline for the final project. To avoid this I plan to write elements of the report as I build or research the associated parts of the program so that I can avoid having to go back through my work at the last moment to finish the report.
+	\item[Inadequate Testing]
+	If not enough testing is done and a lot of bugs are still in the finished game then this would damage my marks, especially when the final code for this program should not number a huge amount.
+	To stop this I plan to test as a build parts of the application as well as dedicate time just for testing at some point in the year.
+	\item[Online Play] Like mentioned before if an online feature is implemented there will inherently be security risks. Given that no secure data will be transmitted by the game the only risks i can foresee is guaranteeing that data transmitted is verified and from the computers that first started the game. There is also a risk in that users will have to communicate their IP addresses to each other. There is little the application can do in this regard other to inform the user of the risk and suggest they use a secure channel to exchange the data.
+\end{description}
+\section{Proposed Solution}
+Given that Reversi is a turn based game there is little need for any real time processing so my decision on programming language is largely made on what I believe myself to be most proficient in and provides easy to use 2 dimensional graphical libraries. For these reasons I have decided to use the Java programming language along with its Swing widget Toolkit for window management\footnote{JFrame Documentation \url{https://docs.oracle.com/javase/7/docs/api/javax/swing/JFrame.html}} and the Java AWT \texttt{BufferStrategy}\footnote{\texttt{BufferStrategy} Documentation \url{https://docs.oracle.com/javase/7/docs/api/java/awt/image/BufferStrategy.html}} as it provides 2D primitive drawing through a graphics object as well as double buffering for a smooth GUI.
+
+During the first week of the year I started to prototype a very simple Reversi game and using a 2 dimensional integer array to represent the board as well as some predefined constants to represent the state of each board position I finished a working 2 player Reversi game. The game has had limited testing but due to the small amount of logic involved there appear to be no bugs. The logic to work out whether a move is legal as well as what pieces to capture is very poor and I imagine can be refined to include a lot more code reuse but it works outwards from the piece last placed checking in the cardinal and diagonal directions. As it works outwards it tests the board cells and if it finds any number of opponents pieces followed by a piece of the players own colour the move is legal.
+\section{Proposed Time Management}
+Since I have made a working 2 player prototype my focus on the first semester will be researching game trees and the various evaluation functions used in Reversi. During this time I also hope to add a menu to the game that will allow players to choose whether they want to play against another person or a computer as well as set difficulty. Depending on how fast the research progresses I plan to implement A very simple computer opponent that does not look at future possibilities but makes a move based on the current state of the board only.
+
+Once the Christmas break starts I will hopefully be in a position to start implementing more advanced AI principles such as a game tree as well as traversal methods like alpha beta pruning. The second semester will be a continuation of this as well as looking into the option of adding the online play feature.
+
+The report as mentioned before will be written in tandem with the above mentioned programming and research to avoid me having to read over my own code and re read any material.
+A timeline can be seen in the Gantt chart below\ref{gantt}
+\begin{cmpfigure}{Project Gantt chart\label{gantt}} 
+	\begin{sideways}
+		\newganttchartelement{voidbar}{
+			voidbar/.style={
+				draw=black,
+				top color=black!25,
+				bottom color=black!23
+			}}
+			\begin{ganttchart}[x unit=0.45cm, vgrid, title label font=\scriptsize,
+				canvas/.style={draw=black, dotted}]{1}{34}
+				\gantttitle{Project schedule shown for e-vision week numbers
+					and semester week numbers}{34} \\
+				\gantttitlelist{9,...,42}{1}\\
+				\gantttitlelist{1,...,12}{1}
+				\gantttitle{CB}{4}
+				\gantttitlelist{1,...,10}{1}
+				\gantttitle{EB}{4}
+				\gantttitlelist{11,...,14}{1}\\
+				
+				
+				%the elements, bars and milestones, are identified as elem0, elem1, etc
+				
+				%elem1
+				\ganttbar{Project proposal}{1}{2}     \\  
+				\ganttbar{Prototype Game}{1}{2}			\\
+				%elem0  
+				\ganttbar{Literature review}{3}{5}    \\ 
+				\ganttbar{Research game AI}{6}{12} 
+				\ganttvoidbar{}{13}{16}
+				\\ %elem1 
+				
+				\ganttbar{Design}{6}{12}               %elem2
+				\ganttvoidbar{}{13}{16} \\
+				%week 1 of semester 2 is the 17th week in schedule 
+				\ganttbar{Coding}{9}{12}                  %elem3
+				\ganttvoidbar{}{13}{16}                   %elem4
+				\ganttbar{}{17}{26}                   \\  %elem5
+				
+				\ganttvoidbar{Testing}{13}{16}                   %elem7
+				\ganttbar{}{17}{26}                    \\ %elem8
+				\ganttmilestone{Code delivery}{26}    \\ %elem9
+				\ganttbar{Final report writing}{25}{30}        \\ %elem10
+				\ganttbar{Inspection preparation}{31}{34} %elem11
+				
+				\ganttlink{elem0}{elem2}
+				\ganttlink{elem1}{elem2}
+				\ganttlink{elem2}{elem3}
+				\ganttlink{elem2}{elem5}
+				\ganttlink{elem6}{elem7}
+				\ganttlink{elem9}{elem12}
+				\ganttlink{elem11}{elem12}
+				\ganttlink{elem12}{elem13}
+				\ganttlink{elem12}{elem14}
+			\end{ganttchart}
+		\end{sideways}
+	\end{cmpfigure}
+\end{document}
